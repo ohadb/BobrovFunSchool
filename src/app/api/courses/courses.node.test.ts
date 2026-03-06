@@ -18,7 +18,12 @@ describe("GET /api/courses", () => {
     const createReq = new Request("http://localhost/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "Math", description: "Math course", language: "en", lessons: [] }),
+      body: JSON.stringify({
+        name: "Math",
+        description: "Math course",
+        language: "en",
+        lessons: [],
+      }),
     });
     await POST(createReq);
 
@@ -94,7 +99,11 @@ describe("POST /api/courses", () => {
     const request = new Request("http://localhost/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "Math", description: "desc", language: "fr" }),
+      body: JSON.stringify({
+        name: "Math",
+        description: "desc",
+        language: "fr",
+      }),
     });
 
     const response = await POST(request);

@@ -1,4 +1,9 @@
-import { Course, CreateCourseInput, UpdateCourseInput, Lesson } from "@/types/course";
+import {
+  Course,
+  CreateCourseInput,
+  UpdateCourseInput,
+  Lesson,
+} from "@/types/course";
 
 let courses: Course[] = [];
 
@@ -29,7 +34,10 @@ export function createCourse(input: CreateCourseInput): Course {
   return course;
 }
 
-export function updateCourse(id: string, input: UpdateCourseInput): Course | undefined {
+export function updateCourse(
+  id: string,
+  input: UpdateCourseInput,
+): Course | undefined {
   const index = courses.findIndex((c) => c.id === id);
   if (index === -1) return undefined;
 

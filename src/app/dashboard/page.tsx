@@ -10,7 +10,9 @@ type ViewMode = "list" | "create" | "edit";
 export default function Dashboard(): React.ReactElement {
   const [courses, setCourses] = useState<Course[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const [editingCourse, setEditingCourse] = useState<Course | undefined>(undefined);
+  const [editingCourse, setEditingCourse] = useState<Course | undefined>(
+    undefined,
+  );
   const [loading, setLoading] = useState(true);
 
   const fetchCourses = useCallback(async (): Promise<void> => {
@@ -94,7 +96,10 @@ export default function Dashboard(): React.ReactElement {
           }}
         >
           <h2 style={{ fontSize: 18, marginBottom: 16 }}>Create New Course</h2>
-          <CourseForm onSave={handleCreate} onCancel={() => setViewMode("list")} />
+          <CourseForm
+            onSave={handleCreate}
+            onCancel={() => setViewMode("list")}
+          />
         </div>
       )}
 

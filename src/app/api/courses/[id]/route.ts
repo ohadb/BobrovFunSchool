@@ -6,7 +6,10 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
+export async function GET(
+  _request: NextRequest,
+  { params }: RouteParams,
+): Promise<NextResponse> {
   const { id } = await params;
   const course = getCourseById(id);
   if (!course) {
@@ -15,7 +18,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams): Promi
   return NextResponse.json(course);
 }
 
-export async function PUT(request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
+export async function PUT(
+  request: NextRequest,
+  { params }: RouteParams,
+): Promise<NextResponse> {
   const { id } = await params;
   const body = (await request.json()) as UpdateCourseInput;
   const updated = updateCourse(id, body);
@@ -27,7 +33,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams): Promis
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: RouteParams
+  { params }: RouteParams,
 ): Promise<NextResponse> {
   const { id } = await params;
   const deleted = deleteCourse(id);
