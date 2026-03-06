@@ -20,6 +20,7 @@ export function createCourse(input: CreateCourseInput): Course {
     id: generateId(),
     name: input.name,
     description: input.description,
+    language: input.language,
     lessons: input.lessons.map((l) => ({ ...l, id: generateId() })),
     createdAt: now,
     updatedAt: now,
@@ -37,6 +38,7 @@ export function updateCourse(id: string, input: UpdateCourseInput): Course | und
     ...existing,
     name: input.name ?? existing.name,
     description: input.description ?? existing.description,
+    language: input.language ?? existing.language,
     lessons: input.lessons
       ? input.lessons.map((l) => ({ ...l, id: generateId() }))
       : existing.lessons,

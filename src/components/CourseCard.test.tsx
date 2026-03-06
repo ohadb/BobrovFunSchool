@@ -7,6 +7,7 @@ const mockCourse: Course = {
   id: "test-id-1",
   name: "Fun Math",
   description: "Learn math through games",
+  language: "en",
   lessons: [
     { id: "lesson-1", title: "Counting", content: "Count to 10", order: 1 },
     { id: "lesson-2", title: "Addition", content: "Add numbers", order: 2 },
@@ -21,6 +22,17 @@ describe("CourseCard", () => {
 
     expect(screen.getByText("Fun Math")).toBeInTheDocument();
     expect(screen.getByText("Learn math through games")).toBeInTheDocument();
+  });
+
+  it("shows course language", () => {
+    render(<CourseCard course={mockCourse} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    expect(screen.getByText("English")).toBeInTheDocument();
+  });
+
+  it("shows Hebrew language label", () => {
+    const hebrewCourse: Course = { ...mockCourse, language: "he" };
+    render(<CourseCard course={hebrewCourse} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    expect(screen.getByText("עברית")).toBeInTheDocument();
   });
 
   it("shows lesson count", () => {

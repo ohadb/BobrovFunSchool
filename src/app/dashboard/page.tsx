@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Course } from "@/types/course";
+import type { Course, CourseLanguage } from "@/types/course";
 import CourseCard from "@/components/CourseCard";
 import CourseForm from "@/components/CourseForm";
 
@@ -27,6 +27,7 @@ export default function Dashboard(): React.ReactElement {
   const handleCreate = async (data: {
     name: string;
     description: string;
+    language: CourseLanguage;
     lessons: { title: string; content: string; order: number }[];
   }): Promise<void> => {
     await fetch("/api/courses", {
@@ -41,6 +42,7 @@ export default function Dashboard(): React.ReactElement {
   const handleUpdate = async (data: {
     name: string;
     description: string;
+    language: CourseLanguage;
     lessons: { title: string; content: string; order: number }[];
   }): Promise<void> => {
     if (!editingCourse) return;

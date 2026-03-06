@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Course, Lesson } from "@/types/course";
+import type { Course, CourseLanguage } from "@/types/course";
 
 interface LessonInput {
   title: string;
@@ -11,13 +11,14 @@ interface LessonInput {
 
 interface CourseFormProps {
   course?: Course;
-  onSave: (data: { name: string; description: string; lessons: LessonInput[] }) => Promise<void>;
+  onSave: (data: { name: string; description: string; language: CourseLanguage; lessons: LessonInput[] }) => Promise<void>;
   onCancel: () => void;
 }
 
 export default function CourseForm({ course, onSave, onCancel }: CourseFormProps): React.ReactElement {
   const [name, setName] = useState(course?.name ?? "");
   const [description, setDescription] = useState(course?.description ?? "");
+  const [language, setLanguage] = useState<CourseLanguage>(course?.language ?? "en");
   const [lessons, setLessons] = useState<LessonInput[]>(
     course?.lessons.map((l) => ({ title: l.title, content: l.content, order: l.order })) ?? []
   );
@@ -40,7 +41,7 @@ export default function CourseForm({ course, onSave, onCancel }: CourseFormProps
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setSaving(true);
-    await onSave({ name, description, lessons });
+    await onSave({ name, description, language, lessons });
     setSaving(false);
   };
 
@@ -65,6 +66,26 @@ export default function CourseForm({ course, onSave, onCancel }: CourseFormProps
           rows={3}
           required
         />
+      </div>
+
+      <div>
+        <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Language</label>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value as CourseLanguage)}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius)",
+            fontSize: 14,
+            fontFamily: "inherit",
+            background: "white",
+          }}
+        >
+          <option value="en">English</option>
+          <option value="he">Hebrew (עברית)</option>
+        </select>
       </div>
 
       <div>

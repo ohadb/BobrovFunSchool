@@ -17,9 +17,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  if (body.language && body.language !== "en" && body.language !== "he") {
+    return NextResponse.json(
+      { error: "Language must be 'en' or 'he'" },
+      { status: 400 }
+    );
+  }
+
   const course = createCourse({
     name: body.name,
     description: body.description,
+    language: body.language ?? "en",
     lessons: body.lessons ?? [],
   });
 

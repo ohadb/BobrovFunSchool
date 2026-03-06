@@ -12,7 +12,7 @@ function makeParams(id: string): { params: Promise<{ id: string }> } {
 
 describe("GET /api/courses/[id]", () => {
   it("returns a course by id", async () => {
-    const course = createCourse({ name: "Math", description: "desc", lessons: [] });
+    const course = createCourse({ name: "Math", description: "desc", language: "en", lessons: [] });
     const request = new NextRequest("http://localhost/api/courses/" + course.id);
     const response = await GET(request, makeParams(course.id));
     const data = await response.json();
@@ -31,7 +31,7 @@ describe("GET /api/courses/[id]", () => {
 
 describe("PUT /api/courses/[id]", () => {
   it("updates a course", async () => {
-    const course = createCourse({ name: "Math", description: "old", lessons: [] });
+    const course = createCourse({ name: "Math", description: "old", language: "en", lessons: [] });
     const request = new NextRequest("http://localhost/api/courses/" + course.id, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -60,7 +60,7 @@ describe("PUT /api/courses/[id]", () => {
 
 describe("DELETE /api/courses/[id]", () => {
   it("deletes an existing course", async () => {
-    const course = createCourse({ name: "Math", description: "desc", lessons: [] });
+    const course = createCourse({ name: "Math", description: "desc", language: "en", lessons: [] });
     const request = new NextRequest("http://localhost/api/courses/" + course.id);
     const response = await DELETE(request, makeParams(course.id));
     const data = await response.json();

@@ -1,3 +1,5 @@
+export type CourseLanguage = "en" | "he";
+
 export interface Lesson {
   id: string;
   title: string;
@@ -9,6 +11,7 @@ export interface Course {
   id: string;
   name: string;
   description: string;
+  language: CourseLanguage;
   lessons: Lesson[];
   createdAt: string;
   updatedAt: string;
@@ -17,11 +20,13 @@ export interface Course {
 export interface CreateCourseInput {
   name: string;
   description: string;
+  language: CourseLanguage;
   lessons: Omit<Lesson, "id">[];
 }
 
 export interface UpdateCourseInput {
   name?: string;
   description?: string;
+  language?: CourseLanguage;
   lessons?: Omit<Lesson, "id">[];
 }

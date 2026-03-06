@@ -18,7 +18,7 @@ describe("GET /api/courses", () => {
     const createReq = new Request("http://localhost/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "Math", description: "Math course", lessons: [] }),
+      body: JSON.stringify({ name: "Math", description: "Math course", language: "en", lessons: [] }),
     });
     await POST(createReq);
 
@@ -38,6 +38,7 @@ describe("POST /api/courses", () => {
       body: JSON.stringify({
         name: "Fun Math",
         description: "Learn math",
+        language: "he",
         lessons: [{ title: "Counting", content: "1 to 10", order: 1 }],
       }),
     });
@@ -47,6 +48,7 @@ describe("POST /api/courses", () => {
 
     expect(response.status).toBe(201);
     expect(data.name).toBe("Fun Math");
+    expect(data.language).toBe("he");
     expect(data.lessons).toHaveLength(1);
     expect(data.id).toBeDefined();
   });
@@ -84,6 +86,18 @@ describe("POST /api/courses", () => {
     const data = await response.json();
 
     expect(response.status).toBe(201);
+    expect(data.language).toBe("en");
     expect(data.lessons).toEqual([]);
+  });
+
+  it("returns 400 for invalid language", async () => {
+    const request = new Request("http://localhost/api/courses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Math", description: "desc", language: "fr" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(400);
   });
 });

@@ -17,6 +17,7 @@ describe("CourseForm", () => {
       id: "test-id",
       name: "Fun Math",
       description: "Math is fun",
+      language: "he",
       lessons: [{ id: "l1", title: "Counting", content: "Learn counting", order: 1 }],
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
@@ -67,6 +68,7 @@ describe("CourseForm", () => {
     expect(onSave).toHaveBeenCalledWith({
       name: "Science",
       description: "Fun science",
+      language: "en",
       lessons: [],
     });
   });

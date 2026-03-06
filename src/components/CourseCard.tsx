@@ -1,6 +1,11 @@
 "use client";
 
-import type { Course } from "@/types/course";
+import type { Course, CourseLanguage } from "@/types/course";
+
+const languageLabels: Record<CourseLanguage, string> = {
+  en: "English",
+  he: "עברית",
+};
 
 interface CourseCardProps {
   course: Course;
@@ -26,8 +31,10 @@ export default function CourseCard({ course, onEdit, onDelete }: CourseCardProps
         <p style={{ color: "var(--text-muted)", fontSize: 14 }}>{course.description}</p>
       </div>
 
-      <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
-        {course.lessons.length} {course.lessons.length === 1 ? "lesson" : "lessons"}
+      <div style={{ display: "flex", gap: 8, fontSize: 13, color: "var(--text-muted)" }}>
+        <span>{languageLabels[course.language]}</span>
+        <span>·</span>
+        <span>{course.lessons.length} {course.lessons.length === 1 ? "lesson" : "lessons"}</span>
       </div>
 
       {course.lessons.length > 0 && (
