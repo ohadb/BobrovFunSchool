@@ -18,8 +18,18 @@ describe("courseStore", () => {
     });
 
     it("returns all created courses", () => {
-      createCourse({ name: "Math", description: "Math course", language: "en", lessons: [] });
-      createCourse({ name: "Science", description: "Science course", language: "he", lessons: [] });
+      createCourse({
+        name: "Math",
+        description: "Math course",
+        language: "en",
+        lessons: [],
+      });
+      createCourse({
+        name: "Science",
+        description: "Science course",
+        language: "he",
+        lessons: [],
+      });
 
       const courses = getAllCourses();
       expect(courses).toHaveLength(2);
@@ -46,6 +56,26 @@ describe("courseStore", () => {
       expect(course.updatedAt).toBeDefined();
     });
 
+    it("creates lessons with optional exam", () => {
+      const course = createCourse({
+        name: "Math",
+        description: "Math course",
+        language: "en",
+        lessons: [
+          {
+            title: "Counting",
+            content: "Learn to count",
+            order: 1,
+            exam: { description: "Count to 100" },
+          },
+          { title: "Addition", content: "Learn to add", order: 2 },
+        ],
+      });
+
+      expect(course.lessons[0].exam).toEqual({ description: "Count to 100" });
+      expect(course.lessons[1].exam).toBeUndefined();
+    });
+
     it("creates lessons with generated IDs", () => {
       const course = createCourse({
         name: "Math",
@@ -66,7 +96,12 @@ describe("courseStore", () => {
 
   describe("getCourseById", () => {
     it("returns course when found", () => {
-      const created = createCourse({ name: "Math", description: "desc", language: "en", lessons: [] });
+      const created = createCourse({
+        name: "Math",
+        description: "desc",
+        language: "en",
+        lessons: [],
+      });
       const found = getCourseById(created.id);
 
       expect(found).toBeDefined();
@@ -80,7 +115,12 @@ describe("courseStore", () => {
 
   describe("updateCourse", () => {
     it("updates course name and description", () => {
-      const created = createCourse({ name: "Math", description: "old", language: "en", lessons: [] });
+      const created = createCourse({
+        name: "Math",
+        description: "old",
+        language: "en",
+        lessons: [],
+      });
       const updated = updateCourse(created.id, {
         name: "Fun Math",
         description: "new description",
@@ -92,7 +132,12 @@ describe("courseStore", () => {
     });
 
     it("preserves fields not included in update", () => {
-      const created = createCourse({ name: "Math", description: "desc", language: "en", lessons: [] });
+      const created = createCourse({
+        name: "Math",
+        description: "desc",
+        language: "en",
+        lessons: [],
+      });
       const updated = updateCourse(created.id, { name: "New Math" });
 
       expect(updated?.name).toBe("New Math");
@@ -116,7 +161,12 @@ describe("courseStore", () => {
     });
 
     it("updates the updatedAt timestamp", () => {
-      const created = createCourse({ name: "Math", description: "desc", language: "en", lessons: [] });
+      const created = createCourse({
+        name: "Math",
+        description: "desc",
+        language: "en",
+        lessons: [],
+      });
       const updated = updateCourse(created.id, { name: "Updated" });
 
       expect(updated?.updatedAt).toBeDefined();
@@ -129,7 +179,12 @@ describe("courseStore", () => {
 
   describe("deleteCourse", () => {
     it("deletes an existing course", () => {
-      const created = createCourse({ name: "Math", description: "desc", language: "en", lessons: [] });
+      const created = createCourse({
+        name: "Math",
+        description: "desc",
+        language: "en",
+        lessons: [],
+      });
       const result = deleteCourse(created.id);
 
       expect(result).toBe(true);

@@ -8,7 +8,9 @@ describe("CourseForm", () => {
     render(<CourseForm onSave={jest.fn()} onCancel={jest.fn()} />);
 
     expect(screen.getByPlaceholderText("e.g. Fun with Math")).toHaveValue("");
-    expect(screen.getByPlaceholderText("What will this course teach?")).toHaveValue("");
+    expect(
+      screen.getByPlaceholderText("What will this course teach?"),
+    ).toHaveValue("");
     expect(screen.getByText("Create Course")).toBeInTheDocument();
   });
 
@@ -18,12 +20,16 @@ describe("CourseForm", () => {
       name: "Fun Math",
       description: "Math is fun",
       language: "he",
-      lessons: [{ id: "l1", title: "Counting", content: "Learn counting", order: 1 }],
+      lessons: [
+        { id: "l1", title: "Counting", content: "Learn counting", order: 1 },
+      ],
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };
 
-    render(<CourseForm course={course} onSave={jest.fn()} onCancel={jest.fn()} />);
+    render(
+      <CourseForm course={course} onSave={jest.fn()} onCancel={jest.fn()} />,
+    );
 
     expect(screen.getByDisplayValue("Fun Math")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Math is fun")).toBeInTheDocument();
@@ -57,12 +63,61 @@ describe("CourseForm", () => {
     expect(screen.queryByText("Lesson 1")).not.toBeInTheDocument();
   });
 
+  it("toggles exam section when + Add Exam is clicked", async () => {
+    render(<CourseForm onSave={jest.fn()} onCancel={jest.fn()} />);
+
+    await userEvent.click(screen.getByText("+ Add Lesson"));
+    expect(screen.getByText("+ Add Exam")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText("+ Add Exam"));
+    expect(screen.getByPlaceholderText("Exam description")).toBeInTheDocument();
+    expect(screen.getByText("Remove Exam")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText("Remove Exam"));
+    expect(
+      screen.queryByPlaceholderText("Exam description"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders exam when editing a course with an exam", () => {
+    const course: Course = {
+      id: "test-id",
+      name: "Fun Math",
+      description: "Math is fun",
+      language: "en",
+      lessons: [
+        {
+          id: "l1",
+          title: "Counting",
+          content: "Learn counting",
+          order: 1,
+          exam: { description: "Test counting" },
+        },
+      ],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+
+    render(
+      <CourseForm course={course} onSave={jest.fn()} onCancel={jest.fn()} />,
+    );
+
+    expect(screen.getByDisplayValue("Test counting")).toBeInTheDocument();
+    expect(screen.getByText("Remove Exam")).toBeInTheDocument();
+  });
+
   it("calls onSave with form data on submit", async () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
     render(<CourseForm onSave={onSave} onCancel={jest.fn()} />);
 
-    await userEvent.type(screen.getByPlaceholderText("e.g. Fun with Math"), "Science");
-    await userEvent.type(screen.getByPlaceholderText("What will this course teach?"), "Fun science");
+    await userEvent.type(
+      screen.getByPlaceholderText("e.g. Fun with Math"),
+      "Science",
+    );
+    await userEvent.type(
+      screen.getByPlaceholderText("What will this course teach?"),
+      "Fun science",
+    );
     await userEvent.click(screen.getByText("Create Course"));
 
     expect(onSave).toHaveBeenCalledWith({

@@ -1,41 +1,86 @@
 "use client";
 
 import { useState } from "react";
-import type { Course, CourseLanguage } from "@/types/course";
+import type { Course, CourseLanguage, Exam } from "@/types/course";
 
 interface LessonInput {
   title: string;
   content: string;
   order: number;
+  exam?: Exam;
 }
 
 interface CourseFormProps {
   course?: Course;
-  onSave: (data: { name: string; description: string; language: CourseLanguage; lessons: LessonInput[] }) => Promise<void>;
+  onSave: (data: {
+    name: string;
+    description: string;
+    language: CourseLanguage;
+    lessons: LessonInput[];
+  }) => Promise<void>;
   onCancel: () => void;
 }
 
-export default function CourseForm({ course, onSave, onCancel }: CourseFormProps): React.ReactElement {
+export default function CourseForm({
+  course,
+  onSave,
+  onCancel,
+}: CourseFormProps): React.ReactElement {
   const [name, setName] = useState(course?.name ?? "");
   const [description, setDescription] = useState(course?.description ?? "");
-  const [language, setLanguage] = useState<CourseLanguage>(course?.language ?? "en");
+  const [language, setLanguage] = useState<CourseLanguage>(
+    course?.language ?? "en",
+  );
   const [lessons, setLessons] = useState<LessonInput[]>(
-    course?.lessons.map((l) => ({ title: l.title, content: l.content, order: l.order })) ?? []
+    course?.lessons.map((l) => ({
+      title: l.title,
+      content: l.content,
+      order: l.order,
+      exam: l.exam,
+    })) ?? [],
   );
   const [saving, setSaving] = useState(false);
 
   const addLesson = (): void => {
-    setLessons([...lessons, { title: "", content: "", order: lessons.length + 1 }]);
+    setLessons([
+      ...lessons,
+      { title: "", content: "", order: lessons.length + 1 },
+    ]);
   };
 
-  const updateLesson = (index: number, field: keyof LessonInput, value: string | number): void => {
+  const updateLesson = (
+    index: number,
+    field: keyof LessonInput,
+    value: string | number,
+  ): void => {
     const updated = [...lessons];
     updated[index] = { ...updated[index], [field]: value };
     setLessons(updated);
   };
 
+  const toggleExam = (index: number): void => {
+    const updated = [...lessons];
+    if (updated[index].exam) {
+      const { exam: _, ...rest } = updated[index];
+      updated[index] = rest as LessonInput;
+    } else {
+      updated[index] = { ...updated[index], exam: { description: "" } };
+    }
+    setLessons(updated);
+  };
+
+  const updateExamDescription = (index: number, description: string): void => {
+    const updated = [...lessons];
+    updated[index] = { ...updated[index], exam: { description } };
+    setLessons(updated);
+  };
+
   const removeLesson = (index: number): void => {
-    setLessons(lessons.filter((_, i) => i !== index).map((l, i) => ({ ...l, order: i + 1 })));
+    setLessons(
+      lessons
+        .filter((_, i) => i !== index)
+        .map((l, i) => ({ ...l, order: i + 1 })),
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -46,9 +91,14 @@ export default function CourseForm({ course, onSave, onCancel }: CourseFormProps
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column", gap: 16 }}
+    >
       <div>
-        <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Course Name</label>
+        <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+          Course Name
+        </label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -58,7 +108,9 @@ export default function CourseForm({ course, onSave, onCancel }: CourseFormProps
       </div>
 
       <div>
-        <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Description</label>
+        <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+          Description
+        </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -69,7 +121,9 @@ export default function CourseForm({ course, onSave, onCancel }: CourseFormProps
       </div>
 
       <div>
-        <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Language</label>
+        <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+          Language
+        </label>
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value as CourseLanguage)}
@@ -89,7 +143,14 @@ export default function CourseForm({ course, onSave, onCancel }: CourseFormProps
       </div>
 
       <div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 8,
+          }}
+        >
           <label style={{ fontWeight: 500 }}>Lessons</label>
           <button type="button" className="secondary" onClick={addLesson}>
             + Add Lesson
@@ -98,7 +159,8 @@ export default function CourseForm({ course, onSave, onCancel }: CourseFormProps
 
         {lessons.length === 0 && (
           <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
-            No lessons yet. Add lessons after creating the course, or click &quot;+ Add Lesson&quot; above.
+            No lessons yet. Add lessons after creating the course, or click
+            &quot;+ Add Lesson&quot; above.
           </p>
         )}
 
@@ -112,9 +174,23 @@ export default function CourseForm({ course, onSave, onCancel }: CourseFormProps
               marginBottom: 8,
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Lesson {lesson.order}</span>
-              <button type="button" className="danger" style={{ padding: "4px 8px", fontSize: 12 }} onClick={() => removeLesson(index)}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
+              }}
+            >
+              <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                Lesson {lesson.order}
+              </span>
+              <button
+                type="button"
+                className="danger"
+                style={{ padding: "4px 8px", fontSize: 12 }}
+                onClick={() => removeLesson(index)}
+              >
                 Remove
               </button>
             </div>
@@ -131,6 +207,25 @@ export default function CourseForm({ course, onSave, onCancel }: CourseFormProps
               placeholder="Lesson content"
               rows={2}
             />
+            <div style={{ marginTop: 8 }}>
+              <button
+                type="button"
+                className="secondary"
+                style={{ padding: "4px 8px", fontSize: 12 }}
+                onClick={() => toggleExam(index)}
+              >
+                {lesson.exam ? "Remove Exam" : "+ Add Exam"}
+              </button>
+              {lesson.exam && (
+                <textarea
+                  value={lesson.exam.description}
+                  onChange={(e) => updateExamDescription(index, e.target.value)}
+                  placeholder="Exam description"
+                  rows={2}
+                  style={{ marginTop: 8 }}
+                />
+              )}
+            </div>
           </div>
         ))}
       </div>

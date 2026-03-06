@@ -18,25 +18,49 @@ const mockCourse: Course = {
 
 describe("CourseCard", () => {
   it("renders course name and description", () => {
-    render(<CourseCard course={mockCourse} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    render(
+      <CourseCard
+        course={mockCourse}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
 
     expect(screen.getByText("Fun Math")).toBeInTheDocument();
     expect(screen.getByText("Learn math through games")).toBeInTheDocument();
   });
 
   it("shows course language", () => {
-    render(<CourseCard course={mockCourse} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    render(
+      <CourseCard
+        course={mockCourse}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
     expect(screen.getByText("English")).toBeInTheDocument();
   });
 
   it("shows Hebrew language label", () => {
     const hebrewCourse: Course = { ...mockCourse, language: "he" };
-    render(<CourseCard course={hebrewCourse} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    render(
+      <CourseCard
+        course={hebrewCourse}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
     expect(screen.getByText("עברית")).toBeInTheDocument();
   });
 
   it("shows lesson count", () => {
-    render(<CourseCard course={mockCourse} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    render(
+      <CourseCard
+        course={mockCourse}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
 
     expect(screen.getByText("2 lessons")).toBeInTheDocument();
   });
@@ -46,21 +70,72 @@ describe("CourseCard", () => {
       ...mockCourse,
       lessons: [mockCourse.lessons[0]],
     };
-    render(<CourseCard course={singleLessonCourse} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    render(
+      <CourseCard
+        course={singleLessonCourse}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
 
     expect(screen.getByText("1 lesson")).toBeInTheDocument();
   });
 
   it("lists lesson titles", () => {
-    render(<CourseCard course={mockCourse} onEdit={jest.fn()} onDelete={jest.fn()} />);
+    render(
+      <CourseCard
+        course={mockCourse}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
 
     expect(screen.getByText("Counting")).toBeInTheDocument();
     expect(screen.getByText("Addition")).toBeInTheDocument();
   });
 
+  it("shows exam description when lesson has an exam", () => {
+    const courseWithExam: Course = {
+      ...mockCourse,
+      lessons: [
+        {
+          id: "lesson-1",
+          title: "Counting",
+          content: "Count to 10",
+          order: 1,
+          exam: { description: "Count from 1 to 100" },
+        },
+        { id: "lesson-2", title: "Addition", content: "Add numbers", order: 2 },
+      ],
+    };
+    render(
+      <CourseCard
+        course={courseWithExam}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText("(Exam: Count from 1 to 100)")).toBeInTheDocument();
+  });
+
+  it("does not show exam info when lesson has no exam", () => {
+    render(
+      <CourseCard
+        course={mockCourse}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryByText(/Exam:/)).not.toBeInTheDocument();
+  });
+
   it("calls onEdit when Edit button is clicked", async () => {
     const onEdit = jest.fn();
-    render(<CourseCard course={mockCourse} onEdit={onEdit} onDelete={jest.fn()} />);
+    render(
+      <CourseCard course={mockCourse} onEdit={onEdit} onDelete={jest.fn()} />,
+    );
 
     await userEvent.click(screen.getByText("Edit"));
     expect(onEdit).toHaveBeenCalledWith(mockCourse);
@@ -68,7 +143,9 @@ describe("CourseCard", () => {
 
   it("calls onDelete when Delete button is clicked", async () => {
     const onDelete = jest.fn();
-    render(<CourseCard course={mockCourse} onEdit={jest.fn()} onDelete={onDelete} />);
+    render(
+      <CourseCard course={mockCourse} onEdit={jest.fn()} onDelete={onDelete} />,
+    );
 
     await userEvent.click(screen.getByText("Delete"));
     expect(onDelete).toHaveBeenCalledWith("test-id-1");

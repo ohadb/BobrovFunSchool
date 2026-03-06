@@ -1,10 +1,15 @@
 export type CourseLanguage = "en" | "he";
 
+export interface Exam {
+  description: string;
+}
+
 export interface Lesson {
   id: string;
   title: string;
   content: string;
   order: number;
+  exam?: Exam;
 }
 
 export interface Course {

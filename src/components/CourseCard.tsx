@@ -13,7 +13,11 @@ interface CourseCardProps {
   onDelete: (id: string) => void;
 }
 
-export default function CourseCard({ course, onEdit, onDelete }: CourseCardProps): React.ReactElement {
+export default function CourseCard({
+  course,
+  onEdit,
+  onDelete,
+}: CourseCardProps): React.ReactElement {
   return (
     <div
       style={{
@@ -28,19 +32,46 @@ export default function CourseCard({ course, onEdit, onDelete }: CourseCardProps
     >
       <div>
         <h3 style={{ fontSize: 18, marginBottom: 4 }}>{course.name}</h3>
-        <p style={{ color: "var(--text-muted)", fontSize: 14 }}>{course.description}</p>
+        <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
+          {course.description}
+        </p>
       </div>
 
-      <div style={{ display: "flex", gap: 8, fontSize: 13, color: "var(--text-muted)" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          fontSize: 13,
+          color: "var(--text-muted)",
+        }}
+      >
         <span>{languageLabels[course.language]}</span>
         <span>·</span>
-        <span>{course.lessons.length} {course.lessons.length === 1 ? "lesson" : "lessons"}</span>
+        <span>
+          {course.lessons.length}{" "}
+          {course.lessons.length === 1 ? "lesson" : "lessons"}
+        </span>
       </div>
 
       {course.lessons.length > 0 && (
-        <ul style={{ fontSize: 13, paddingLeft: 20, color: "var(--text-muted)" }}>
+        <ul
+          style={{ fontSize: 13, paddingLeft: 20, color: "var(--text-muted)" }}
+        >
           {course.lessons.map((lesson) => (
-            <li key={lesson.id}>{lesson.title}</li>
+            <li key={lesson.id}>
+              {lesson.title}
+              {lesson.exam && (
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--primary)",
+                    marginLeft: 6,
+                  }}
+                >
+                  (Exam: {lesson.exam.description})
+                </span>
+              )}
+            </li>
           ))}
         </ul>
       )}
