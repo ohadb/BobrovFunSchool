@@ -52,3 +52,7 @@ export function deleteCourse(id: string): boolean {
   courses.splice(index, 1);
   return true;
 }
+
+export function resetCourses(): void {
+  courses = [];
+}
