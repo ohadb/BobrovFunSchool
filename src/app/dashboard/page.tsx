@@ -76,7 +76,7 @@ export default function Dashboard(): React.ReactElement {
           marginBottom: 24,
         }}
       >
-        <h1 style={{ fontSize: 24 }}>Parent Dashboard</h1>
+        <h1 style={{ fontSize: 24 }}>Parent school dashboard</h1>
         {viewMode === "list" && (
           <button className="primary" onClick={() => setViewMode("create")}>
             + New Course
