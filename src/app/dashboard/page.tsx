@@ -72,6 +72,22 @@ export default function Dashboard(): React.ReactElement {
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 16px" }}>
       <div
         style={{
+          position: "fixed",
+          bottom: 8,
+          right: 8,
+          background: "#f00",
+          color: "#fff",
+          fontSize: 11,
+          padding: "2px 6px",
+          borderRadius: 4,
+          zIndex: 9999,
+          fontFamily: "monospace",
+        }}
+      >
+        build #1
+      </div>
+      <div
+        style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
