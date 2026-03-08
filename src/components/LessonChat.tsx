@@ -1,0 +1,223 @@
+"use client";
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import type { ChatMessage } from "@/types/chat";
+import type { Lesson } from "@/types/course";
+
+interface LessonChatProps {
+  courseId: string;
+  lessonId: string;
+  lessonTitle: string;
+  lessonContent: string;
+  onBack: () => void;
+}
+
+export default function LessonChat({
+  courseId,
+  lessonId,
+  lessonTitle,
+  onBack,
+}: LessonChatProps): React.ReactElement {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = useCallback((): void => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadHistory(): Promise<void> {
+      const res = await fetch(
+        `/api/chat/history?courseId=${courseId}&lessonId=${lessonId}`,
+      );
+      const data = (await res.json()) as ChatMessage[];
+
+      if (cancelled) return;
+
+      if (data.length > 0) {
+        setMessages(data);
+        setLoadingHistory(false);
+      } else {
+        setLoadingHistory(false);
+        await sendGreeting();
+      }
+    }
+
+    async function sendGreeting(): Promise<void> {
+      if (cancelled) return;
+      setSending(true);
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseId,
+          lessonId,
+          message: "Hello! I'm ready to learn this lesson.",
+        }),
+      });
+      const greeting = (await res.json()) as ChatMessage;
+      if (cancelled) return;
+
+      setMessages([
+        {
+          role: "user",
+          content: "Hello! I'm ready to learn this lesson.",
+          timestamp: new Date().toISOString(),
+        },
+        greeting,
+      ]);
+      setSending(false);
+    }
+
+    loadHistory();
+
+    return (): void => {
+      cancelled = true;
+    };
+  }, [courseId, lessonId]);
+
+  async function handleSend(): Promise<void> {
+    const text = input.trim();
+    if (!text || sending) return;
+
+    const userMsg: ChatMessage = {
+      role: "user",
+      content: text,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setSending(true);
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ courseId, lessonId, message: text }),
+    });
+    const reply = (await res.json()) as ChatMessage;
+    setMessages((prev) => [...prev, reply]);
+    setSending(false);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "calc(100vh - 80px)",
+        maxWidth: 700,
+        margin: "0 auto",
+        padding: "16px 16px 0",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 16,
+        }}
+      >
+        <button className="secondary" onClick={onBack}>
+          ← Back
+        </button>
+        <h2 style={{ fontSize: 18 }}>{lessonTitle}</h2>
+      </div>
+
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          paddingBottom: 16,
+        }}
+      >
+        {loadingHistory && (
+          <p style={{ color: "var(--text-muted)", textAlign: "center" }}>
+            Loading chat...
+          </p>
+        )}
+
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            style={{
+              alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+              maxWidth: "80%",
+              padding: "10px 14px",
+              borderRadius: 12,
+              background:
+                msg.role === "user" ? "var(--primary)" : "var(--card-bg)",
+              color: msg.role === "user" ? "white" : "var(--text)",
+              border:
+                msg.role === "assistant" ? "1px solid var(--border)" : "none",
+              fontSize: 14,
+              lineHeight: 1.5,
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {msg.content}
+          </div>
+        ))}
+
+        {sending && (
+          <div
+            style={{
+              alignSelf: "flex-start",
+              color: "var(--text-muted)",
+              fontSize: 14,
+              padding: "10px 14px",
+            }}
+          >
+            Thinking...
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          padding: "12px 0 16px",
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Type your message..."
+          disabled={sending}
+          style={{ flex: 1 }}
+        />
+        <button
+          className="primary"
+          onClick={handleSend}
+          disabled={sending || !input.trim()}
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+}

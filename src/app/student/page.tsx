@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Course } from "@/types/course";
+import type { Course, Lesson } from "@/types/course";
+import LessonChat from "@/components/LessonChat";
 
 export default function StudentPortal(): React.ReactElement {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Course | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   useEffect(() => {
     fetch("/api/courses")
@@ -16,6 +18,18 @@ export default function StudentPortal(): React.ReactElement {
         setLoading(false);
       });
   }, []);
+
+  if (selected && selectedLesson) {
+    return (
+      <LessonChat
+        courseId={selected.id}
+        lessonId={selectedLesson.id}
+        lessonTitle={selectedLesson.title}
+        lessonContent={selectedLesson.content}
+        onBack={() => setSelectedLesson(null)}
+      />
+    );
+  }
 
   if (selected) {
     return (
@@ -36,14 +50,24 @@ export default function StudentPortal(): React.ReactElement {
             .slice()
             .sort((a, b) => a.order - b.order)
             .map((lesson, i) => (
-              <div
+              <button
                 key={lesson.id}
+                onClick={() => setSelectedLesson(lesson)}
                 style={{
                   background: "var(--card-bg)",
                   border: "1px solid var(--border)",
                   borderRadius: "var(--radius)",
                   padding: 20,
+                  textAlign: "left",
+                  cursor: "pointer",
+                  transition: "border-color 0.2s",
                 }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.borderColor = "var(--primary)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.borderColor = "var(--border)")
+                }
               >
                 <h3 style={{ fontSize: 16, marginBottom: 8 }}>
                   {i + 1}. {lesson.title}
@@ -51,7 +75,7 @@ export default function StudentPortal(): React.ReactElement {
                 <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
                   {lesson.content}
                 </p>
-              </div>
+              </button>
             ))}
           {selected.lessons.length === 0 && (
             <p style={{ color: "var(--text-muted)" }}>No lessons yet.</p>
@@ -95,12 +119,17 @@ export default function StudentPortal(): React.ReactElement {
               (e.currentTarget.style.borderColor = "var(--border)")
             }
           >
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>{course.name}</div>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>
+              {course.name}
+            </div>
             <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
               {course.description}
             </div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>
-              {course.lessons.length} lesson{course.lessons.length !== 1 ? "s" : ""}
+            <div
+              style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}
+            >
+              {course.lessons.length} lesson
+              {course.lessons.length !== 1 ? "s" : ""}
             </div>
           </button>
         ))}
