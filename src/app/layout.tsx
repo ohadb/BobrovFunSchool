@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import DebugUserPicker from "@/components/DebugUserPicker";
 
 export const metadata: Metadata = {
   title: "BobrovFunSchool - Parent Dashboard",
@@ -13,7 +14,10 @@ export default function RootLayout({
 }): React.ReactElement {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <DebugUserPicker />
+        <div style={{ paddingTop: 36 }}>{children}</div>
+      </body>
     </html>
   );
 }
