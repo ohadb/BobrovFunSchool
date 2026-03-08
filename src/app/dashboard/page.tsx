@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Course, CourseLanguage } from "@/types/course";
 import CourseCard from "@/components/CourseCard";
 import CourseForm from "@/components/CourseForm";
+import CourseAssigner from "@/components/CourseAssigner";
 
 type ViewMode = "list" | "create" | "edit";
 
@@ -142,6 +143,7 @@ export default function Dashboard(): React.ReactElement {
 
       {viewMode === "list" && (
         <>
+          {!loading && <CourseAssigner courses={courses} />}
           {loading && <p>Loading courses...</p>}
           {!loading && courses.length === 0 && (
             <div

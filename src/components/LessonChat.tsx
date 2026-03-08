@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { ChatMessage } from "@/types/chat";
-import type { Lesson } from "@/types/course";
+import { getCurrentUserId } from "@/components/DebugUserPicker";
 
 interface LessonChatProps {
   courseId: string;
@@ -20,6 +20,7 @@ export default function LessonChat({
   hasExam,
   onBack,
 }: LessonChatProps): React.ReactElement {
+  const studentId = getCurrentUserId();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -40,7 +41,7 @@ export default function LessonChat({
 
     async function loadHistory(): Promise<void> {
       const res = await fetch(
-        `/api/chat/history?courseId=${courseId}&lessonId=${lessonId}`,
+        `/api/chat/history?studentId=${studentId}&courseId=${courseId}&lessonId=${lessonId}`,
       );
       const data = (await res.json()) as ChatMessage[];
 
@@ -62,6 +63,7 @@ export default function LessonChat({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          studentId,
           courseId,
           lessonId,
           message: "!שלום! אני מוכן ללמוד את השיעור הזה",
@@ -105,6 +107,7 @@ export default function LessonChat({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        studentId,
         courseId,
         lessonId,
         message: text,
@@ -133,6 +136,7 @@ export default function LessonChat({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        studentId,
         courseId,
         lessonId,
         message: examMsg,

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import type { Course, Lesson } from "@/types/course";
 import LessonChat from "@/components/LessonChat";
+import { getCurrentUserId } from "@/components/DebugUserPicker";
 
 export default function StudentPortal(): React.ReactElement {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -11,12 +12,27 @@ export default function StudentPortal(): React.ReactElement {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   useEffect(() => {
-    fetch("/api/courses")
-      .then((r) => r.json())
-      .then((data: Course[]) => {
-        setCourses(data);
+    const studentId = getCurrentUserId();
+
+    async function loadAssignedCourses(): Promise<void> {
+      const assignRes = await fetch(
+        `/api/assignments?studentId=${studentId}`,
+      );
+      const assignedIds = (await assignRes.json()) as string[];
+
+      if (assignedIds.length === 0) {
+        setCourses([]);
         setLoading(false);
-      });
+        return;
+      }
+
+      const coursesRes = await fetch("/api/courses");
+      const allCourses = (await coursesRes.json()) as Course[];
+      setCourses(allCourses.filter((c) => assignedIds.includes(c.id)));
+      setLoading(false);
+    }
+
+    loadAssignedCourses();
   }, []);
 
   if (selected && selectedLesson) {

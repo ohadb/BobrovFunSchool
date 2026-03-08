@@ -1,15 +1,35 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { APP_USERS } from "@/types/user";
 
-const USER_TYPES = [
-  { label: "Parent", path: "/dashboard" },
-  { label: "Student", path: "/student" },
-];
+const ROLE_LABELS: Record<string, string> = {
+  parent: "הורה",
+  student: "תלמיד/ה",
+};
+
+export function getCurrentUserId(): string {
+  if (typeof window === "undefined") return "ohad";
+  return localStorage.getItem("currentUserId") ?? "ohad";
+}
 
 export default function DebugUserPicker(): React.ReactElement {
   const router = useRouter();
   const pathname = usePathname();
+  const [currentId, setCurrentId] = useState("ohad");
+
+  useEffect(() => {
+    setCurrentId(getCurrentUserId());
+  }, []);
+
+  function selectUser(userId: string): void {
+    const user = APP_USERS.find((u) => u.id === userId);
+    if (!user) return;
+    localStorage.setItem("currentUserId", userId);
+    setCurrentId(userId);
+    router.push(user.role === "parent" ? "/dashboard" : "/student");
+  }
 
   return (
     <div
@@ -29,16 +49,13 @@ export default function DebugUserPicker(): React.ReactElement {
         fontFamily: "monospace",
       }}
     >
-      <span style={{ color: "#f00", fontWeight: "bold", marginRight: 4 }}>
-        DEBUG
-      </span>
-      <span style={{ color: "#aaa" }}>View as:</span>
-      {USER_TYPES.map(({ label, path }) => {
-        const active = pathname.startsWith(path);
+      <span style={{ color: "#aaa" }}>משתמש:</span>
+      {APP_USERS.map((user) => {
+        const active = user.id === currentId;
         return (
           <button
-            key={path}
-            onClick={() => router.push(path)}
+            key={user.id}
+            onClick={() => selectUser(user.id)}
             style={{
               background: active ? "#4f46e5" : "#333",
               color: active ? "#fff" : "#aaa",
@@ -50,7 +67,7 @@ export default function DebugUserPicker(): React.ReactElement {
               cursor: "pointer",
             }}
           >
-            {label}
+            {user.name} ({ROLE_LABELS[user.role]})
           </button>
         );
       })}

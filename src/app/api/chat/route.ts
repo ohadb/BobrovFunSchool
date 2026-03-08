@@ -10,11 +10,11 @@ export async function POST(
   request: Request,
 ): Promise<NextResponse<ChatMessage | { error: string }>> {
   const body = (await request.json()) as ChatRequestBody;
-  const { courseId, lessonId, message, examMode } = body;
+  const { studentId, courseId, lessonId, message, examMode } = body;
 
-  if (!courseId || !lessonId || !message) {
+  if (!studentId || !courseId || !lessonId || !message) {
     return NextResponse.json(
-      { error: "courseId, lessonId, and message are required" },
+      { error: "studentId, courseId, lessonId, and message are required" },
       { status: 400 },
     );
   }
@@ -29,14 +29,14 @@ export async function POST(
     return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
   }
 
-  const session = await getChatSession(courseId, lessonId);
+  const session = await getChatSession(studentId, courseId, lessonId);
 
   const userMessage: ChatMessage = {
     role: "user",
     content: message,
     timestamp: new Date().toISOString(),
   };
-  await saveChatMessage(courseId, lessonId, userMessage);
+  await saveChatMessage(studentId, courseId, lessonId, userMessage);
 
   const isHebrew = course.language === "he";
   const systemPrompt = examMode
@@ -44,7 +44,6 @@ export async function POST(
         course.name,
         lesson.title,
         lesson.content,
-        lesson.exam?.description ?? "",
         isHebrew,
       )
     : buildSystemPrompt(
@@ -77,7 +76,7 @@ export async function POST(
     content: assistantContent,
     timestamp: new Date().toISOString(),
   };
-  await saveChatMessage(courseId, lessonId, assistantMessage);
+  await saveChatMessage(studentId, courseId, lessonId, assistantMessage);
 
   return NextResponse.json(assistantMessage);
 }
@@ -108,7 +107,6 @@ function buildExamPrompt(
   courseName: string,
   lessonTitle: string,
   lessonContent: string,
-  examDescription: string,
   isHebrew: boolean,
 ): string {
   const lang = isHebrew ? "Hebrew (עברית)" : "English";
@@ -116,14 +114,14 @@ function buildExamPrompt(
 
 Current lesson: "${lessonTitle}"
 Lesson content: ${lessonContent}
-Exam questions: ${examDescription}
 
 Instructions:
 - Respond in ${lang}.
-- Ask the exam questions ONE AT A TIME. Start with the first question.
+- Generate 3-5 questions based on the lesson content. All questions MUST have numeric answers (numbers, calculations, quantities, etc.).
+- Ask questions ONE AT A TIME. Start with the first question.
 - Wait for the student's answer before moving to the next question.
 - After each answer, tell the student if they got it right or wrong with a brief explanation.
 - Be encouraging and supportive, even when the answer is wrong.
-- After all questions are done, give a short summary of how they did.
+- After all questions are done, give a short summary of how they did with a score (e.g. 4/5).
 - Keep responses concise and age-appropriate.`;
 }
