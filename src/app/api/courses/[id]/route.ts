@@ -11,7 +11,7 @@ export async function GET(
   { params }: RouteParams,
 ): Promise<NextResponse> {
   const { id } = await params;
-  const course = getCourseById(id);
+  const course = await getCourseById(id);
   if (!course) {
     return NextResponse.json({ error: "Course not found" }, { status: 404 });
   }
@@ -24,7 +24,7 @@ export async function PUT(
 ): Promise<NextResponse> {
   const { id } = await params;
   const body = (await request.json()) as UpdateCourseInput;
-  const updated = updateCourse(id, body);
+  const updated = await updateCourse(id, body);
   if (!updated) {
     return NextResponse.json({ error: "Course not found" }, { status: 404 });
   }
@@ -36,7 +36,7 @@ export async function DELETE(
   { params }: RouteParams,
 ): Promise<NextResponse> {
   const { id } = await params;
-  const deleted = deleteCourse(id);
+  const deleted = await deleteCourse(id);
   if (!deleted) {
     return NextResponse.json({ error: "Course not found" }, { status: 404 });
   }

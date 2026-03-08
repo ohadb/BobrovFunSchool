@@ -3,7 +3,7 @@ import { getAllCourses, createCourse } from "@/lib/courseStore";
 import { CreateCourseInput } from "@/types/course";
 
 export async function GET(): Promise<NextResponse> {
-  const courses = getAllCourses();
+  const courses = await getAllCourses();
   return NextResponse.json(courses);
 }
 
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const course = createCourse({
+  const course = await createCourse({
     name: body.name,
     description: body.description,
     language: body.language ?? "en",

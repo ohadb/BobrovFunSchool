@@ -1,25 +1,34 @@
-import {
-  Course,
-  CreateCourseInput,
-  UpdateCourseInput,
-  Lesson,
-} from "@/types/course";
+import { Redis } from "@upstash/redis";
+import { Course, CreateCourseInput, UpdateCourseInput } from "@/types/course";
 
-let courses: Course[] = [];
+const redis = Redis.fromEnv();
+
+const COURSES_KEY = "courses";
 
 function generateId(): string {
   return crypto.randomUUID();
 }
 
-export function getAllCourses(): Course[] {
-  return courses;
+async function readCourses(): Promise<Course[]> {
+  const data = await redis.get<Course[]>(COURSES_KEY);
+  return data ?? [];
 }
 
-export function getCourseById(id: string): Course | undefined {
+async function writeCourses(courses: Course[]): Promise<void> {
+  await redis.set(COURSES_KEY, courses);
+}
+
+export async function getAllCourses(): Promise<Course[]> {
+  return readCourses();
+}
+
+export async function getCourseById(id: string): Promise<Course | undefined> {
+  const courses = await readCourses();
   return courses.find((c) => c.id === id);
 }
 
-export function createCourse(input: CreateCourseInput): Course {
+export async function createCourse(input: CreateCourseInput): Promise<Course> {
+  const courses = await readCourses();
   const now = new Date().toISOString();
   const course: Course = {
     id: generateId(),
@@ -31,13 +40,15 @@ export function createCourse(input: CreateCourseInput): Course {
     updatedAt: now,
   };
   courses.push(course);
+  await writeCourses(courses);
   return course;
 }
 
-export function updateCourse(
+export async function updateCourse(
   id: string,
   input: UpdateCourseInput,
-): Course | undefined {
+): Promise<Course | undefined> {
+  const courses = await readCourses();
   const index = courses.findIndex((c) => c.id === id);
   if (index === -1) return undefined;
 
@@ -53,16 +64,19 @@ export function updateCourse(
     updatedAt: new Date().toISOString(),
   };
   courses[index] = updated;
+  await writeCourses(courses);
   return updated;
 }
 
-export function deleteCourse(id: string): boolean {
+export async function deleteCourse(id: string): Promise<boolean> {
+  const courses = await readCourses();
   const index = courses.findIndex((c) => c.id === id);
   if (index === -1) return false;
   courses.splice(index, 1);
+  await writeCourses(courses);
   return true;
 }
 
-export function resetCourses(): void {
-  courses = [];
+export async function resetCourses(): Promise<void> {
+  await writeCourses([]);
 }
