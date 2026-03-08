@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCourseById, updateCourse, deleteCourse } from "@/lib/courseStore";
+import { generateExamQuestions } from "@/lib/generateExam";
 import { UpdateCourseInput } from "@/types/course";
 
 interface RouteParams {
@@ -24,6 +25,21 @@ export async function PUT(
 ): Promise<NextResponse> {
   const { id } = await params;
   const body = (await request.json()) as UpdateCourseInput;
+
+  if (body.lessons) {
+    const existing = await getCourseById(id);
+    const language = body.language ?? existing?.language ?? "en";
+    for (const lesson of body.lessons) {
+      if (lesson.exam && !lesson.exam.description.trim()) {
+        lesson.exam.description = await generateExamQuestions(
+          lesson.title,
+          lesson.content,
+          language,
+        );
+      }
+    }
+  }
+
   const updated = await updateCourse(id, body);
   if (!updated) {
     return NextResponse.json({ error: "Course not found" }, { status: 404 });

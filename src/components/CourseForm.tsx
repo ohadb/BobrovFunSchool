@@ -220,7 +220,7 @@ export default function CourseForm({
                 <textarea
                   value={lesson.exam.description}
                   onChange={(e) => updateExamDescription(index, e.target.value)}
-                  placeholder="Exam description"
+                  placeholder="Exam description (leave empty to auto-generate)"
                   rows={2}
                   style={{ marginTop: 8 }}
                 />
