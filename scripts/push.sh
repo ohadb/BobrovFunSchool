@@ -12,6 +12,6 @@ sed -i '' "s/build #$CURRENT/build #$NEXT/" "$DASHBOARD"
 
 echo "Build #$CURRENT → #$NEXT"
 
-git add "$DASHBOARD"
+git add -A
 git commit -m "Release build #$NEXT"
 git push origin main
