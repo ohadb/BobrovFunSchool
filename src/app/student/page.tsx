@@ -33,13 +33,16 @@ export default function StudentPortal(): React.ReactElement {
 
   if (selected) {
     return (
-      <div style={{ maxWidth: 700, margin: "0 auto", padding: "32px 16px" }}>
+      <div
+        dir="rtl"
+        style={{ maxWidth: 700, margin: "0 auto", padding: "32px 16px" }}
+      >
         <button
           className="secondary"
           onClick={() => setSelected(null)}
           style={{ marginBottom: 24 }}
         >
-          ← Back to courses
+          חזרה לקורסים →
         </button>
         <h1 style={{ fontSize: 24, marginBottom: 8 }}>{selected.name}</h1>
         <p style={{ color: "var(--text-muted)", marginBottom: 32 }}>
@@ -58,7 +61,7 @@ export default function StudentPortal(): React.ReactElement {
                   border: "1px solid var(--border)",
                   borderRadius: "var(--radius)",
                   padding: 20,
-                  textAlign: "left",
+                  textAlign: "right",
                   cursor: "pointer",
                   transition: "border-color 0.2s",
                 }}
@@ -78,7 +81,7 @@ export default function StudentPortal(): React.ReactElement {
               </button>
             ))}
           {selected.lessons.length === 0 && (
-            <p style={{ color: "var(--text-muted)" }}>No lessons yet.</p>
+            <p style={{ color: "var(--text-muted)" }}>אין שיעורים עדיין.</p>
           )}
         </div>
       </div>
@@ -86,16 +89,19 @@ export default function StudentPortal(): React.ReactElement {
   }
 
   return (
-    <div style={{ maxWidth: 700, margin: "0 auto", padding: "32px 16px" }}>
-      <h1 style={{ fontSize: 24, marginBottom: 4 }}>My Courses</h1>
+    <div
+      dir="rtl"
+      style={{ maxWidth: 700, margin: "0 auto", padding: "32px 16px" }}
+    >
+      <h1 style={{ fontSize: 24, marginBottom: 4 }}>הקורסים שלי</h1>
       <p style={{ color: "var(--text-muted)", marginBottom: 32 }}>
-        Pick a course to start learning!
+        בחרו קורס כדי להתחיל ללמוד!
       </p>
 
-      {loading && <p>Loading...</p>}
+      {loading && <p>טוען...</p>}
 
       {!loading && courses.length === 0 && (
-        <p style={{ color: "var(--text-muted)" }}>No courses available yet.</p>
+        <p style={{ color: "var(--text-muted)" }}>אין קורסים זמינים עדיין.</p>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -108,7 +114,7 @@ export default function StudentPortal(): React.ReactElement {
               border: "1px solid var(--border)",
               borderRadius: "var(--radius)",
               padding: 20,
-              textAlign: "left",
+              textAlign: "right",
               cursor: "pointer",
               transition: "border-color 0.2s",
             }}
@@ -128,8 +134,7 @@ export default function StudentPortal(): React.ReactElement {
             <div
               style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}
             >
-              {course.lessons.length} lesson
-              {course.lessons.length !== 1 ? "s" : ""}
+              {course.lessons.length} שיעורים
             </div>
           </button>
         ))}

@@ -61,7 +61,7 @@ export default function LessonChat({
         body: JSON.stringify({
           courseId,
           lessonId,
-          message: "Hello! I'm ready to learn this lesson.",
+          message: "!שלום! אני מוכן ללמוד את השיעור הזה",
         }),
       });
       const greeting = (await res.json()) as ChatMessage;
@@ -70,7 +70,7 @@ export default function LessonChat({
       setMessages([
         {
           role: "user",
-          content: "Hello! I'm ready to learn this lesson.",
+          content: "!שלום! אני מוכן ללמוד את השיעור הזה",
           timestamp: new Date().toISOString(),
         },
         greeting,
@@ -117,6 +117,7 @@ export default function LessonChat({
 
   return (
     <div
+      dir="rtl"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -135,7 +136,7 @@ export default function LessonChat({
         }}
       >
         <button className="secondary" onClick={onBack}>
-          ← Back
+          חזרה →
         </button>
         <h2 style={{ fontSize: 18 }}>{lessonTitle}</h2>
       </div>
@@ -152,7 +153,7 @@ export default function LessonChat({
       >
         {loadingHistory && (
           <p style={{ color: "var(--text-muted)", textAlign: "center" }}>
-            Loading chat...
+            טוען צ׳אט...
           </p>
         )}
 
@@ -187,7 +188,7 @@ export default function LessonChat({
               padding: "10px 14px",
             }}
           >
-            Thinking...
+            חושב...
           </div>
         )}
 
@@ -206,7 +207,7 @@ export default function LessonChat({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type your message..."
+          placeholder="כתבו הודעה..."
           disabled={sending}
           style={{ flex: 1 }}
         />
@@ -215,7 +216,7 @@ export default function LessonChat({
           onClick={handleSend}
           disabled={sending || !input.trim()}
         >
-          Send
+          שלח
         </button>
       </div>
     </div>
