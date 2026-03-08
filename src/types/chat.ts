@@ -14,4 +14,5 @@ export interface ChatRequestBody {
   courseId: string;
   lessonId: string;
   message: string;
+  examMode?: boolean;
 }

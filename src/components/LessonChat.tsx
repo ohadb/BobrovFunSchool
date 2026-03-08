@@ -9,6 +9,7 @@ interface LessonChatProps {
   lessonId: string;
   lessonTitle: string;
   lessonContent: string;
+  hasExam: boolean;
   onBack: () => void;
 }
 
@@ -16,12 +17,14 @@ export default function LessonChat({
   courseId,
   lessonId,
   lessonTitle,
+  hasExam,
   onBack,
 }: LessonChatProps): React.ReactElement {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [examStarted, setExamStarted] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback((): void => {
@@ -101,7 +104,40 @@ export default function LessonChat({
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ courseId, lessonId, message: text }),
+      body: JSON.stringify({
+        courseId,
+        lessonId,
+        message: text,
+        examMode: examStarted,
+      }),
+    });
+    const reply = (await res.json()) as ChatMessage;
+    setMessages((prev) => [...prev, reply]);
+    setSending(false);
+  }
+
+  async function handleStartExam(): Promise<void> {
+    if (sending) return;
+    setExamStarted(true);
+
+    const examMsg = "!אני רוצה להיבחן עכשיו";
+    const userMsg: ChatMessage = {
+      role: "user",
+      content: examMsg,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
+    setSending(true);
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        courseId,
+        lessonId,
+        message: examMsg,
+        examMode: true,
+      }),
     });
     const reply = (await res.json()) as ChatMessage;
     setMessages((prev) => [...prev, reply]);
@@ -138,7 +174,17 @@ export default function LessonChat({
         <button className="secondary" onClick={onBack}>
           חזרה →
         </button>
-        <h2 style={{ fontSize: 18 }}>{lessonTitle}</h2>
+        <h2 style={{ fontSize: 18, flex: 1 }}>{lessonTitle}</h2>
+        {hasExam && !examStarted && (
+          <button
+            className="primary"
+            onClick={handleStartExam}
+            disabled={sending || loadingHistory}
+            style={{ whiteSpace: "nowrap" }}
+          >
+            אני רוצה להיבחן עכשיו
+          </button>
+        )}
       </div>
 
       <div

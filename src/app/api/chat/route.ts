@@ -10,7 +10,7 @@ export async function POST(
   request: Request,
 ): Promise<NextResponse<ChatMessage | { error: string }>> {
   const body = (await request.json()) as ChatRequestBody;
-  const { courseId, lessonId, message } = body;
+  const { courseId, lessonId, message, examMode } = body;
 
   if (!courseId || !lessonId || !message) {
     return NextResponse.json(
@@ -39,12 +39,20 @@ export async function POST(
   await saveChatMessage(courseId, lessonId, userMessage);
 
   const isHebrew = course.language === "he";
-  const systemPrompt = buildSystemPrompt(
-    course.name,
-    lesson.title,
-    lesson.content,
-    isHebrew,
-  );
+  const systemPrompt = examMode
+    ? buildExamPrompt(
+        course.name,
+        lesson.title,
+        lesson.content,
+        lesson.exam?.description ?? "",
+        isHebrew,
+      )
+    : buildSystemPrompt(
+        course.name,
+        lesson.title,
+        lesson.content,
+        isHebrew,
+      );
 
   const historyMessages = [
     ...session.messages.map((m) => ({
@@ -94,4 +102,28 @@ Instructions:
 - Keep responses concise (2-4 sentences usually).
 - If the student seems confused, try explaining differently.
 - Stay on topic — focus on this lesson's content.`;
+}
+
+function buildExamPrompt(
+  courseName: string,
+  lessonTitle: string,
+  lessonContent: string,
+  examDescription: string,
+  isHebrew: boolean,
+): string {
+  const lang = isHebrew ? "Hebrew (עברית)" : "English";
+  return `You are a friendly examiner for kids. You are testing a student on a lesson from the course "${courseName}".
+
+Current lesson: "${lessonTitle}"
+Lesson content: ${lessonContent}
+Exam questions: ${examDescription}
+
+Instructions:
+- Respond in ${lang}.
+- Ask the exam questions ONE AT A TIME. Start with the first question.
+- Wait for the student's answer before moving to the next question.
+- After each answer, tell the student if they got it right or wrong with a brief explanation.
+- Be encouraging and supportive, even when the answer is wrong.
+- After all questions are done, give a short summary of how they did.
+- Keep responses concise and age-appropriate.`;
 }

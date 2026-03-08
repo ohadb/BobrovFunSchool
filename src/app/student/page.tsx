@@ -26,6 +26,7 @@ export default function StudentPortal(): React.ReactElement {
         lessonId={selectedLesson.id}
         lessonTitle={selectedLesson.title}
         lessonContent={selectedLesson.content}
+        hasExam={!!selectedLesson.exam}
         onBack={() => setSelectedLesson(null)}
       />
     );
