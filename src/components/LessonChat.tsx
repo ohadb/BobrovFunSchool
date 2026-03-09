@@ -37,6 +37,19 @@ export default function LessonChat({
   }, [messages, scrollToBottom]);
 
   useEffect(() => {
+    const startTime = Date.now();
+    return (): void => {
+      const seconds = Math.round((Date.now() - startTime) / 1000);
+      if (seconds > 0) {
+        navigator.sendBeacon(
+          "/api/usage",
+          JSON.stringify({ studentId, seconds }),
+        );
+      }
+    };
+  }, [studentId]);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function loadHistory(): Promise<void> {

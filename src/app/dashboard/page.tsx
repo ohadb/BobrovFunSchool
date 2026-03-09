@@ -5,8 +5,10 @@ import type { Course, CourseLanguage } from "@/types/course";
 import CourseCard from "@/components/CourseCard";
 import CourseForm from "@/components/CourseForm";
 import CourseAssigner from "@/components/CourseAssigner";
+import StudentProgress from "@/components/StudentProgress";
 
 type ViewMode = "list" | "create" | "edit";
+type Tab = "courses" | "progress";
 
 export default function Dashboard(): React.ReactElement {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -15,6 +17,7 @@ export default function Dashboard(): React.ReactElement {
     undefined,
   );
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>("courses");
 
   const fetchCourses = useCallback(async (): Promise<void> => {
     const response = await fetch("/api/courses");
@@ -87,23 +90,53 @@ export default function Dashboard(): React.ReactElement {
       >
         build #5
       </div>
+      <h1 style={{ fontSize: 24, marginBottom: 16 }}>Parent Dashboard</h1>
+
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          gap: 0,
           marginBottom: 24,
+          borderBottom: "2px solid var(--border)",
         }}
       >
-        <h1 style={{ fontSize: 24 }}>Parent school dashboard</h1>
-        {viewMode === "list" && (
-          <button className="primary" onClick={() => setViewMode("create")}>
+        {(["courses", "progress"] as Tab[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            style={{
+              background: "none",
+              color: tab === t ? "var(--primary)" : "var(--text-muted)",
+              borderBottom:
+                tab === t ? "2px solid var(--primary)" : "2px solid transparent",
+              borderRadius: 0,
+              padding: "8px 20px",
+              fontSize: 14,
+              fontWeight: tab === t ? 600 : 400,
+              cursor: "pointer",
+              marginBottom: -2,
+            }}
+          >
+            {t === "courses" ? "Courses" : "Student Progress"}
+          </button>
+        ))}
+        <div style={{ flex: 1 }} />
+        {tab === "courses" && viewMode === "list" && (
+          <button
+            className="primary"
+            onClick={() => setViewMode("create")}
+            style={{ alignSelf: "center" }}
+          >
             + New Course
           </button>
         )}
       </div>
 
-      {viewMode === "create" && (
+      {tab === "progress" && !loading && (
+        <StudentProgress courses={courses} />
+      )}
+
+      {tab === "courses" && viewMode === "create" && (
         <div
           style={{
             background: "var(--card-bg)",
@@ -120,7 +153,7 @@ export default function Dashboard(): React.ReactElement {
         </div>
       )}
 
-      {viewMode === "edit" && editingCourse && (
+      {tab === "courses" && viewMode === "edit" && editingCourse && (
         <div
           style={{
             background: "var(--card-bg)",
@@ -141,7 +174,7 @@ export default function Dashboard(): React.ReactElement {
         </div>
       )}
 
-      {viewMode === "list" && (
+      {tab === "courses" && viewMode === "list" && (
         <>
           {!loading && <CourseAssigner courses={courses} />}
           {loading && <p>Loading courses...</p>}
