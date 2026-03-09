@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getChatSession, saveChatMessage } from "@/lib/chatStore";
 import { getCourseById } from "@/lib/courseStore";
+import { saveExamResult } from "@/lib/examResultStore";
 import type { ChatRequestBody, ChatMessage } from "@/types/chat";
 
 const anthropic = new Anthropic();
@@ -10,7 +11,7 @@ export async function POST(
   request: Request,
 ): Promise<NextResponse<ChatMessage | { error: string }>> {
   const body = (await request.json()) as ChatRequestBody;
-  const { studentId, courseId, lessonId, message, examMode } = body;
+  const { studentId, studentName, courseId, lessonId, message, examMode } = body;
 
   if (!studentId || !courseId || !lessonId || !message) {
     return NextResponse.json(
@@ -44,12 +45,14 @@ export async function POST(
         course.name,
         lesson.title,
         lesson.content,
+        studentName,
         isHebrew,
       )
     : buildSystemPrompt(
         course.name,
         lesson.title,
         lesson.content,
+        studentName,
         isHebrew,
       );
 
@@ -78,6 +81,19 @@ export async function POST(
   };
   await saveChatMessage(studentId, courseId, lessonId, assistantMessage);
 
+  if (examMode) {
+    const scoreMatch = assistantContent.match(/\[SCORE:\s*(\d+)\/(\d+)\]/);
+    if (scoreMatch) {
+      await saveExamResult(
+        studentId,
+        courseId,
+        lessonId,
+        parseInt(scoreMatch[1], 10),
+        parseInt(scoreMatch[2], 10),
+      );
+    }
+  }
+
   return NextResponse.json(assistantMessage);
 }
 
@@ -85,16 +101,20 @@ function buildSystemPrompt(
   courseName: string,
   lessonTitle: string,
   lessonContent: string,
+  studentName: string,
   isHebrew: boolean,
 ): string {
   const lang = isHebrew ? "Hebrew (עברית)" : "English";
   return `You are a friendly, encouraging tutor for kids. You are teaching a lesson from the course "${courseName}".
+The student's name is ${studentName}.
 
 Current lesson: "${lessonTitle}"
 Lesson content: ${lessonContent}
 
 Instructions:
 - Respond in ${lang}.
+- Address the student by their name (${studentName}).
+- Greet them warmly by name when starting the lesson.
 - Teach the lesson content in a fun, age-appropriate way.
 - Ask comprehension questions to check understanding.
 - Give positive reinforcement and gentle corrections.
@@ -107,10 +127,11 @@ function buildExamPrompt(
   courseName: string,
   lessonTitle: string,
   lessonContent: string,
+  studentName: string,
   isHebrew: boolean,
 ): string {
   const lang = isHebrew ? "Hebrew (עברית)" : "English";
-  return `You are a friendly examiner for kids. You are testing a student on a lesson from the course "${courseName}".
+  return `You are a friendly examiner for kids. You are testing a student named ${studentName} on a lesson from the course "${courseName}".
 
 Current lesson: "${lessonTitle}"
 Lesson content: ${lessonContent}
@@ -121,7 +142,9 @@ Instructions:
 - Ask questions ONE AT A TIME. Start with the first question.
 - Wait for the student's answer before moving to the next question.
 - After each answer, tell the student if they got it right or wrong with a brief explanation.
+- Address the student by their name (${studentName}).
 - Be encouraging and supportive, even when the answer is wrong.
-- After all questions are done, give a short summary of how they did with a score (e.g. 4/5).
+- After all questions are done, give a short summary of how they did.
+- At the very end of the summary message, add the score in this exact format: [SCORE: X/Y] where X is correct answers and Y is total questions. This marker is required.
 - Keep responses concise and age-appropriate.`;
 }

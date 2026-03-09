@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { ChatMessage } from "@/types/chat";
 import { getCurrentUserId } from "@/components/DebugUserPicker";
+import { APP_USERS } from "@/types/user";
 
 interface LessonChatProps {
   courseId: string;
@@ -21,6 +22,8 @@ export default function LessonChat({
   onBack,
 }: LessonChatProps): React.ReactElement {
   const studentId = getCurrentUserId();
+  const studentName =
+    APP_USERS.find((u) => u.id === studentId)?.nameHe ?? studentId;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -43,7 +46,9 @@ export default function LessonChat({
       if (seconds > 0) {
         navigator.sendBeacon(
           "/api/usage",
-          JSON.stringify({ studentId, seconds }),
+          new Blob([JSON.stringify({ studentId, seconds })], {
+            type: "application/json",
+          }),
         );
       }
     };
@@ -77,6 +82,7 @@ export default function LessonChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId,
+          studentName,
           courseId,
           lessonId,
           message: "!שלום! אני מוכן ללמוד את השיעור הזה",

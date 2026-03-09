@@ -12,6 +12,7 @@ export interface ChatSession {
 
 export interface ChatRequestBody {
   studentId: string;
+  studentName: string;
   courseId: string;
   lessonId: string;
   message: string;
