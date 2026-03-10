@@ -167,6 +167,40 @@ export default function LessonChat({
     setSending(false);
   }
 
+  async function handleReset(): Promise<void> {
+    if (sending) return;
+    setSending(true);
+    setMessages([]);
+    setExamStarted(false);
+
+    await fetch(
+      `/api/chat/history?studentId=${studentId}&courseId=${courseId}&lessonId=${lessonId}`,
+      { method: "DELETE" },
+    );
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        studentId,
+        studentName,
+        courseId,
+        lessonId,
+        message: "!שלום! אני מוכן ללמוד את השיעור הזה",
+      }),
+    });
+    const greeting = (await res.json()) as ChatMessage;
+    setMessages([
+      {
+        role: "user",
+        content: "!שלום! אני מוכן ללמוד את השיעור הזה",
+        timestamp: new Date().toISOString(),
+      },
+      greeting,
+    ]);
+    setSending(false);
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -196,6 +230,14 @@ export default function LessonChat({
       >
         <button className="secondary" onClick={onBack}>
           חזרה →
+        </button>
+        <button
+          className="danger"
+          onClick={handleReset}
+          disabled={sending || loadingHistory}
+          style={{ fontSize: 13 }}
+        >
+          להתחיל מחדש
         </button>
         <h2 style={{ fontSize: 18, flex: 1 }}>{lessonTitle}</h2>
         {hasExam && !examStarted && (
