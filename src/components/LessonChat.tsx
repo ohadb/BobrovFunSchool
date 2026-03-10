@@ -30,6 +30,7 @@ export default function LessonChat({
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [examStarted, setExamStarted] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const scrollToBottom = useCallback((): void => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -109,6 +110,14 @@ export default function LessonChat({
     };
   }, [courseId, lessonId]);
 
+  function handleStop(): void {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    setSending(false);
+  }
+
   async function handleSend(): Promise<void> {
     const text = input.trim();
     if (!text || sending) return;
@@ -122,19 +131,28 @@ export default function LessonChat({
     setInput("");
     setSending(true);
 
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        studentId,
-        courseId,
-        lessonId,
-        message: text,
-        examMode: examStarted,
-      }),
-    });
-    const reply = (await res.json()) as ChatMessage;
-    setMessages((prev) => [...prev, reply]);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId,
+          courseId,
+          lessonId,
+          message: text,
+          examMode: examStarted,
+        }),
+        signal: controller.signal,
+      });
+      const reply = (await res.json()) as ChatMessage;
+      setMessages((prev) => [...prev, reply]);
+    } catch {
+      // aborted — do nothing
+    }
+    abortRef.current = null;
     setSending(false);
   }
 
@@ -151,19 +169,28 @@ export default function LessonChat({
     setMessages((prev) => [...prev, userMsg]);
     setSending(true);
 
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        studentId,
-        courseId,
-        lessonId,
-        message: examMsg,
-        examMode: true,
-      }),
-    });
-    const reply = (await res.json()) as ChatMessage;
-    setMessages((prev) => [...prev, reply]);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId,
+          courseId,
+          lessonId,
+          message: examMsg,
+          examMode: true,
+        }),
+        signal: controller.signal,
+      });
+      const reply = (await res.json()) as ChatMessage;
+      setMessages((prev) => [...prev, reply]);
+    } catch {
+      // aborted
+    }
+    abortRef.current = null;
     setSending(false);
   }
 
@@ -294,12 +321,22 @@ export default function LessonChat({
           <div
             style={{
               alignSelf: "flex-start",
-              color: "var(--text-muted)",
-              fontSize: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
               padding: "10px 14px",
             }}
           >
-            חושב...
+            <span style={{ color: "var(--text-muted)", fontSize: 14 }}>
+              חושב...
+            </span>
+            <button
+              className="secondary"
+              onClick={handleStop}
+              style={{ fontSize: 12, padding: "4px 10px" }}
+            >
+              תפסיק לחשוב
+            </button>
           </div>
         )}
 
