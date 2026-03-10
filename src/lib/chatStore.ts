@@ -34,6 +34,19 @@ export async function saveChatMessage(
   await redis.set(key, messages);
 }
 
+export async function removeLastMessage(
+  studentId: string,
+  courseId: string,
+  lessonId: string,
+): Promise<void> {
+  const key = chatKey(studentId, courseId, lessonId);
+  const existing = await redis.get<ChatMessage[]>(key);
+  if (existing && existing.length > 0) {
+    existing.pop();
+    await redis.set(key, existing);
+  }
+}
+
 export async function clearChatSession(
   studentId: string,
   courseId: string,

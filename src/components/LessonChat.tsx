@@ -115,6 +115,12 @@ export default function LessonChat({
       abortRef.current.abort();
       abortRef.current = null;
     }
+    // Remove the last user message from UI and server
+    setMessages((prev) => prev.slice(0, -1));
+    fetch(
+      `/api/chat/history?studentId=${studentId}&courseId=${courseId}&lessonId=${lessonId}`,
+      { method: "PATCH" },
+    );
     setSending(false);
   }
 
