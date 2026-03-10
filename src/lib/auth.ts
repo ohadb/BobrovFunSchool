@@ -3,8 +3,8 @@ import { APP_USERS, type AppUser } from "@/types/user";
 const USER_PASSWORDS: Record<string, string> = {
   ohad: "Fundbox01",
   racheli: "Fundbox01",
-  gaia: "gaia01",
-  roni: "roni01",
+  gaia: "4445",
+  roni: "4445",
 };
 
 const AUTH_KEY = "currentUserId";
