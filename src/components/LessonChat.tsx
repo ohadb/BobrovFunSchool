@@ -29,6 +29,7 @@ export default function LessonChat({
   const [sending, setSending] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [examStarted, setExamStarted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -90,7 +91,10 @@ export default function LessonChat({
             message: "!שלום! אני מוכן ללמוד את השיעור הזה",
           }),
         });
-        if (!res.ok) throw new Error("Chat API error");
+        if (!res.ok) {
+          const errBody = await res.text();
+          throw new Error(`API ${res.status}: ${errBody}`);
+        }
         const greeting = (await res.json()) as ChatMessage;
         if (cancelled) return;
 
@@ -102,9 +106,11 @@ export default function LessonChat({
           },
           greeting,
         ]);
-      } catch {
-        // If greeting fails, show a retry-able state
-        if (!cancelled) setMessages([]);
+      } catch (err) {
+        if (!cancelled) {
+          setMessages([]);
+          setError(`Greeting failed: ${err instanceof Error ? err.message : String(err)}`);
+        }
       }
       if (!cancelled) setSending(false);
     }
@@ -142,6 +148,7 @@ export default function LessonChat({
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setSending(true);
+    setError(null);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -159,10 +166,15 @@ export default function LessonChat({
         }),
         signal: controller.signal,
       });
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(`API ${res.status}: ${errBody}`);
+      }
       const reply = (await res.json()) as ChatMessage;
       setMessages((prev) => [...prev, reply]);
-    } catch {
-      // aborted — do nothing
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setError(`Send failed: ${err instanceof Error ? err.message : String(err)}`);
     }
     abortRef.current = null;
     setSending(false);
@@ -180,6 +192,7 @@ export default function LessonChat({
     };
     setMessages((prev) => [...prev, userMsg]);
     setSending(true);
+    setError(null);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -197,10 +210,15 @@ export default function LessonChat({
         }),
         signal: controller.signal,
       });
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(`API ${res.status}: ${errBody}`);
+      }
       const reply = (await res.json()) as ChatMessage;
       setMessages((prev) => [...prev, reply]);
-    } catch {
-      // aborted
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setError(`Exam failed: ${err instanceof Error ? err.message : String(err)}`);
     }
     abortRef.current = null;
     setSending(false);
@@ -214,6 +232,7 @@ export default function LessonChat({
     setSending(true);
     setMessages([]);
     setExamStarted(false);
+    setError(null);
 
     try {
       await fetch(
@@ -232,6 +251,10 @@ export default function LessonChat({
           message: "!שלום! אני מוכן ללמוד את השיעור הזה",
         }),
       });
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(`API ${res.status}: ${errBody}`);
+      }
       const greeting = (await res.json()) as ChatMessage;
       setMessages([
         {
@@ -241,8 +264,8 @@ export default function LessonChat({
         },
         greeting,
       ]);
-    } catch {
-      // If greeting fails, at least the chat is cleared — show empty state
+    } catch (err) {
+      setError(`Reset failed: ${err instanceof Error ? err.message : String(err)}`);
     }
     setSending(false);
   }
@@ -335,6 +358,42 @@ export default function LessonChat({
             {msg.content}
           </div>
         ))}
+
+        {error && (
+          <div
+            style={{
+              alignSelf: "center",
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              borderRadius: 12,
+              padding: "16px 20px",
+              maxWidth: "90%",
+              textAlign: "center",
+            }}
+          >
+            <p style={{ fontSize: 16, fontWeight: 600, color: "#b91c1c", marginBottom: 8 }}>
+              אוי לא, משהו השתבש!
+            </p>
+            <p style={{ fontSize: 14, color: "#b91c1c", marginBottom: 12 }}>
+              תדברו עם אבא המדהים שלכם
+            </p>
+            <p
+              style={{
+                fontSize: 11,
+                color: "#999",
+                background: "#f9fafb",
+                padding: 8,
+                borderRadius: 6,
+                fontFamily: "monospace",
+                wordBreak: "break-all",
+                textAlign: "left",
+                direction: "ltr",
+              }}
+            >
+              {error}
+            </p>
+          </div>
+        )}
 
         {sending && (
           <div
