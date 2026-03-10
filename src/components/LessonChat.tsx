@@ -188,13 +188,6 @@ export default function LessonChat({
     setExamStarted(true);
     setSending(true);
     setError(null);
-    setMessages([]);
-
-    // Clear chat history first so exam starts fresh
-    await fetch(
-      `/api/chat/history?studentId=${studentId}&courseId=${courseId}&lessonId=${lessonId}`,
-      { method: "DELETE" },
-    );
 
     const examMsg = "!אני רוצה להיבחן עכשיו";
     const userMsg: ChatMessage = {
@@ -202,7 +195,7 @@ export default function LessonChat({
       content: examMsg,
       timestamp: new Date().toISOString(),
     };
-    setMessages([userMsg]);
+    setMessages((prev) => [...prev, userMsg]);
 
     const controller = new AbortController();
     abortRef.current = controller;
