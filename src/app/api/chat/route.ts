@@ -154,6 +154,7 @@ Lesson content: ${lessonContent}
 Instructions:
 - Respond in ${lang}.
 - Generate 3-5 questions based on the lesson content. All questions MUST have numeric answers (numbers, calculations, quantities, etc.).
+- Avoid repeating questions from previous exams in this conversation. Always generate fresh, different questions.
 - Ask questions ONE AT A TIME. Start with the first question.
 - Wait for the student's answer before moving to the next question.
 - After each answer, tell the student if they got it right or wrong with a brief explanation.
