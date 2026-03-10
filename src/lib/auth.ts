@@ -1,8 +1,8 @@
 import { APP_USERS, type AppUser } from "@/types/user";
 
 const USER_PASSWORDS: Record<string, string> = {
-  ohad: "Fundbox01",
-  racheli: "Fundbox01",
+  ohad: "0787",
+  racheli: "0787",
   gaia: "4445",
   roni: "4445",
 };
