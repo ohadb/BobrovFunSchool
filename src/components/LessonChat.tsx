@@ -209,31 +209,35 @@ export default function LessonChat({
     setMessages([]);
     setExamStarted(false);
 
-    await fetch(
-      `/api/chat/history?studentId=${studentId}&courseId=${courseId}&lessonId=${lessonId}`,
-      { method: "DELETE" },
-    );
+    try {
+      await fetch(
+        `/api/chat/history?studentId=${studentId}&courseId=${courseId}&lessonId=${lessonId}`,
+        { method: "DELETE" },
+      );
 
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        studentId,
-        studentName,
-        courseId,
-        lessonId,
-        message: "!שלום! אני מוכן ללמוד את השיעור הזה",
-      }),
-    });
-    const greeting = (await res.json()) as ChatMessage;
-    setMessages([
-      {
-        role: "user",
-        content: "!שלום! אני מוכן ללמוד את השיעור הזה",
-        timestamp: new Date().toISOString(),
-      },
-      greeting,
-    ]);
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId,
+          studentName,
+          courseId,
+          lessonId,
+          message: "!שלום! אני מוכן ללמוד את השיעור הזה",
+        }),
+      });
+      const greeting = (await res.json()) as ChatMessage;
+      setMessages([
+        {
+          role: "user",
+          content: "!שלום! אני מוכן ללמוד את השיעור הזה",
+          timestamp: new Date().toISOString(),
+        },
+        greeting,
+      ]);
+    } catch {
+      // If greeting fails, at least the chat is cleared — show empty state
+    }
     setSending(false);
   }
 
