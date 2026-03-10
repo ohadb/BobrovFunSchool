@@ -60,7 +60,7 @@ export default function LoginPage(): React.ReactElement {
             color: "var(--text)",
           }}
         >
-          BobrovFunSchool
+          Bobrov Fun School!
         </h1>
         <p
           style={{

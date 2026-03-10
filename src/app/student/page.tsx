@@ -110,7 +110,10 @@ export default function StudentPortal(): React.ReactElement {
       dir="rtl"
       style={{ maxWidth: 700, margin: "0 auto", padding: "32px 16px" }}
     >
-      <h1 style={{ fontSize: 24, marginBottom: 4 }}>הקורסים שלי</h1>
+      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16, textAlign: "center" }}>
+        !Bobrov Fun School
+      </h1>
+      <h2 style={{ fontSize: 20, marginBottom: 4 }}>הקורסים שלי</h2>
       <p style={{ color: "var(--text-muted)", marginBottom: 32 }}>
         בחרו קורס כדי להתחיל ללמוד!
       </p>
