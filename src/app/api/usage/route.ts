@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addStudyTime, getUsageLast7Days } from "@/lib/usageStore";
+import { getStudentMessageCountsByDay } from "@/lib/chatStore";
 
 export async function GET(
   request: NextRequest,
 ): Promise<
-  NextResponse<{ date: string; minutes: number }[] | { error: string }>
+  NextResponse<
+    { date: string; minutes: number; messages: number }[] | { error: string }
+  >
 > {
   const studentId = request.nextUrl.searchParams.get("studentId");
   if (!studentId) {
@@ -14,7 +17,12 @@ export async function GET(
     );
   }
   const usage = await getUsageLast7Days(studentId);
-  return NextResponse.json(usage);
+  const messageCounts = await getStudentMessageCountsByDay(studentId);
+  const enriched = usage.map((day) => ({
+    ...day,
+    messages: messageCounts[day.date] ?? 0,
+  }));
+  return NextResponse.json(enriched);
 }
 
 export async function POST(

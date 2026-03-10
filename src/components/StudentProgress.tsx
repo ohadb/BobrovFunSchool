@@ -11,6 +11,7 @@ const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 interface DayUsage {
   date: string;
   minutes: number;
+  messages: number;
 }
 
 interface ExamResult {
@@ -102,6 +103,15 @@ function UsageGraph({
               <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
                 {dayName}
               </span>
+              <span
+                style={{
+                  fontSize: 10,
+                  color: day.messages > 0 ? "var(--primary)" : "var(--text-muted)",
+                  fontWeight: day.messages > 0 ? 600 : 400,
+                }}
+              >
+                {day.messages > 0 ? `${day.messages} msg` : "—"}
+              </span>
             </div>
           );
         })}
@@ -113,7 +123,8 @@ function UsageGraph({
           color: "var(--text-muted)",
         }}
       >
-        Total: {usage.reduce((sum, d) => sum + d.minutes, 0)} minutes this week
+        Total: {usage.reduce((sum, d) => sum + d.minutes, 0)} minutes,{" "}
+        {usage.reduce((sum, d) => sum + d.messages, 0)} messages this week
       </div>
     </div>
   );

@@ -47,6 +47,25 @@ export async function removeLastMessage(
   }
 }
 
+export async function getStudentMessageCountsByDay(
+  studentId: string,
+): Promise<Record<string, number>> {
+  const keys = await redis.keys(`chat:${studentId}:*`);
+  const counts: Record<string, number> = {};
+
+  for (const key of keys) {
+    const messages = await redis.get<ChatMessage[]>(key);
+    if (!messages) continue;
+    for (const msg of messages) {
+      if (msg.role !== "user") continue;
+      const date = msg.timestamp.slice(0, 10);
+      counts[date] = (counts[date] ?? 0) + 1;
+    }
+  }
+
+  return counts;
+}
+
 export async function clearChatSession(
   studentId: string,
   courseId: string,
