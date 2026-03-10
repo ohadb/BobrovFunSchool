@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getChatSession, saveChatMessage } from "@/lib/chatStore";
 import { getCourseById } from "@/lib/courseStore";
 import { saveExamResult } from "@/lib/examResultStore";
+import { getInterests } from "@/lib/interestsStore";
 import type { ChatRequestBody, ChatMessage } from "@/types/chat";
 
 const anthropic = new Anthropic();
@@ -40,6 +41,7 @@ export async function POST(
   await saveChatMessage(studentId, courseId, lessonId, userMessage);
 
   const isHebrew = course.language === "he";
+  const interests = await getInterests(studentId);
   const systemPrompt = examMode
     ? buildExamPrompt(
         course.name,
@@ -47,6 +49,7 @@ export async function POST(
         lesson.content,
         studentName,
         isHebrew,
+        interests,
       )
     : buildSystemPrompt(
         course.name,
@@ -54,6 +57,7 @@ export async function POST(
         lesson.content,
         studentName,
         isHebrew,
+        interests,
       );
 
   const historyMessages = [
@@ -103,8 +107,13 @@ function buildSystemPrompt(
   lessonContent: string,
   studentName: string,
   isHebrew: boolean,
+  interests: string[],
 ): string {
   const lang = isHebrew ? "Hebrew (עברית)" : "English";
+  const interestsLine =
+    interests.length > 0
+      ? `\n- The student has the following topics of interest: ${interests.join(", ")}. Whenever possible, use examples, analogies, and questions related to these topics to make the lesson more engaging and relatable.`
+      : "";
   return `You are a friendly, encouraging tutor for kids. You are teaching a lesson from the course "${courseName}".
 The student's name is ${studentName}.
 
@@ -121,7 +130,7 @@ Instructions:
 - Keep responses concise (2-4 sentences usually).
 - If the student seems confused, try explaining differently.
 - Be funny when possible — use humor to make learning enjoyable.
-- Stay on topic — focus on this lesson's content.`;
+- Stay on topic — focus on this lesson's content.${interestsLine}`;
 }
 
 function buildExamPrompt(
@@ -130,8 +139,13 @@ function buildExamPrompt(
   lessonContent: string,
   studentName: string,
   isHebrew: boolean,
+  interests: string[],
 ): string {
   const lang = isHebrew ? "Hebrew (עברית)" : "English";
+  const interestsLine =
+    interests.length > 0
+      ? `\n- The student has the following topics of interest: ${interests.join(", ")}. Whenever possible, frame questions using scenarios or examples related to these topics.`
+      : "";
   return `You are a friendly examiner for kids. You are testing a student named ${studentName} on a lesson from the course "${courseName}".
 
 Current lesson: "${lessonTitle}"
@@ -147,5 +161,5 @@ Instructions:
 - Be encouraging and supportive, even when the answer is wrong.
 - After all questions are done, give a short summary of how they did.
 - At the very end of the summary message, add the score in this exact format: [SCORE: X/Y] where X is correct answers and Y is total questions. This marker is required.
-- Keep responses concise and age-appropriate.`;
+- Keep responses concise and age-appropriate.${interestsLine}`;
 }

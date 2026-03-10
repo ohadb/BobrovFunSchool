@@ -6,9 +6,10 @@ import CourseCard from "@/components/CourseCard";
 import CourseForm from "@/components/CourseForm";
 import CourseAssigner from "@/components/CourseAssigner";
 import StudentProgress from "@/components/StudentProgress";
+import StudentPersonalization from "@/components/StudentPersonalization";
 
 type ViewMode = "list" | "create" | "edit";
-type Tab = "courses" | "progress";
+type Tab = "courses" | "progress" | "personalization";
 
 export default function Dashboard(): React.ReactElement {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -100,26 +101,33 @@ export default function Dashboard(): React.ReactElement {
           borderBottom: "2px solid var(--border)",
         }}
       >
-        {(["courses", "progress"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              background: "none",
-              color: tab === t ? "var(--primary)" : "var(--text-muted)",
-              borderBottom:
-                tab === t ? "2px solid var(--primary)" : "2px solid transparent",
-              borderRadius: 0,
-              padding: "8px 20px",
-              fontSize: 14,
-              fontWeight: tab === t ? 600 : 400,
-              cursor: "pointer",
-              marginBottom: -2,
-            }}
-          >
-            {t === "courses" ? "Courses" : "Student Progress"}
-          </button>
-        ))}
+        {(["courses", "progress", "personalization"] as Tab[]).map((t) => {
+          const labels: Record<Tab, string> = {
+            courses: "Courses",
+            progress: "Student Progress",
+            personalization: "Personalization",
+          };
+          return (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              style={{
+                background: "none",
+                color: tab === t ? "var(--primary)" : "var(--text-muted)",
+                borderBottom:
+                  tab === t ? "2px solid var(--primary)" : "2px solid transparent",
+                borderRadius: 0,
+                padding: "8px 20px",
+                fontSize: 14,
+                fontWeight: tab === t ? 600 : 400,
+                cursor: "pointer",
+                marginBottom: -2,
+              }}
+            >
+              {labels[t]}
+            </button>
+          );
+        })}
         <div style={{ flex: 1 }} />
         {tab === "courses" && viewMode === "list" && (
           <button
@@ -135,6 +143,8 @@ export default function Dashboard(): React.ReactElement {
       {tab === "progress" && !loading && (
         <StudentProgress courses={courses} />
       )}
+
+      {tab === "personalization" && <StudentPersonalization />}
 
       {tab === "courses" && viewMode === "create" && (
         <div
