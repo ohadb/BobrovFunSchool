@@ -6,6 +6,64 @@ import { APP_USERS } from "@/types/user";
 
 const STUDENTS = APP_USERS.filter((u) => u.role === "student");
 
+function AnalysisPopup({
+  analysis,
+  onClose,
+}: {
+  analysis: string;
+  onClose: () => void;
+}): React.ReactElement {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 10000,
+        padding: 16,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#fff",
+          borderRadius: 12,
+          padding: 28,
+          maxWidth: 520,
+          width: "100%",
+          maxHeight: "80vh",
+          overflowY: "auto",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+        }}
+      >
+        <h3 style={{ fontSize: 16, marginBottom: 16 }}>Student Analysis</h3>
+        <div
+          dir="rtl"
+          style={{
+            fontSize: 14,
+            lineHeight: 1.7,
+            whiteSpace: "pre-wrap",
+            color: "var(--text)",
+          }}
+        >
+          {analysis}
+        </div>
+        <button
+          className="primary"
+          onClick={onClose}
+          style={{ marginTop: 20, width: "100%" }}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 interface DayUsage {
@@ -196,6 +254,23 @@ function StudentCard({
 }): React.ReactElement {
   const [assignedCourses, setAssignedCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [analyzing, setAnalyzing] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+
+  async function handleAnalyze(courseId: string, lessonId: string): Promise<void> {
+    const key = `${courseId}:${lessonId}`;
+    setAnalyzing(key);
+    try {
+      const res = await fetch(
+        `/api/analyze?studentId=${studentId}&courseId=${courseId}&lessonId=${lessonId}`,
+      );
+      const data = (await res.json()) as { analysis: string };
+      setAnalysis(data.analysis);
+    } catch {
+      setAnalysis("Failed to analyze. Please try again.");
+    }
+    setAnalyzing(null);
+  }
 
   useEffect(() => {
     async function load(): Promise<void> {
@@ -273,11 +348,23 @@ function StudentCard({
                     }}
                   >
                     <span>{lesson.title}</span>
-                    <LessonExamResults
-                      studentId={studentId}
-                      courseId={course.id}
-                      lessonId={lesson.id}
-                    />
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <button
+                        className="secondary"
+                        onClick={() => handleAnalyze(course.id, lesson.id)}
+                        disabled={analyzing === `${course.id}:${lesson.id}`}
+                        style={{ fontSize: 11, padding: "3px 8px", whiteSpace: "nowrap" }}
+                      >
+                        {analyzing === `${course.id}:${lesson.id}`
+                          ? "Analyzing..."
+                          : "Analyze Progress"}
+                      </button>
+                      <LessonExamResults
+                        studentId={studentId}
+                        courseId={course.id}
+                        lessonId={lesson.id}
+                      />
+                    </div>
                   </div>
                 ))}
             </div>
@@ -290,6 +377,13 @@ function StudentCard({
           </div>
         ))}
       </div>
+
+      {analysis && (
+        <AnalysisPopup
+          analysis={analysis}
+          onClose={() => setAnalysis(null)}
+        />
+      )}
     </div>
   );
 }
