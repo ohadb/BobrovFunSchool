@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { ChatMessage } from "@/types/chat";
-import { getCurrentUserId } from "@/components/DebugUserPicker";
+import { getCurrentUserId } from "@/lib/auth";
 import { APP_USERS } from "@/types/user";
 
 interface LessonChatProps {

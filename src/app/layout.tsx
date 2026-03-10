@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import DebugUserPicker from "@/components/DebugUserPicker";
+import AuthGuard from "@/components/AuthGuard";
 
 export const metadata: Metadata = {
-  title: "BobrovFunSchool - Parent Dashboard",
+  title: "BobrovFunSchool",
   description: "A fun learning platform for kids",
 };
 
@@ -13,10 +13,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <html lang="en">
+    <html lang="he" dir="rtl">
       <body>
-        <DebugUserPicker />
-        <div style={{ paddingTop: 36 }}>{children}</div>
+        <AuthGuard>{children}</AuthGuard>
       </body>
     </html>
   );

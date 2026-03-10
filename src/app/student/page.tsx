@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import type { Course, Lesson } from "@/types/course";
 import LessonChat from "@/components/LessonChat";
-import { getCurrentUserId } from "@/components/DebugUserPicker";
+import { getCurrentUserId } from "@/lib/auth";
 
 export default function StudentPortal(): React.ReactElement {
   const [courses, setCourses] = useState<Course[]>([]);
