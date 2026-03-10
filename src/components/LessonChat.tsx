@@ -181,8 +181,20 @@ export default function LessonChat({
   }
 
   async function handleStartExam(): Promise<void> {
-    if (sending) return;
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
     setExamStarted(true);
+    setSending(true);
+    setError(null);
+    setMessages([]);
+
+    // Clear chat history first so exam starts fresh
+    await fetch(
+      `/api/chat/history?studentId=${studentId}&courseId=${courseId}&lessonId=${lessonId}`,
+      { method: "DELETE" },
+    );
 
     const examMsg = "!אני רוצה להיבחן עכשיו";
     const userMsg: ChatMessage = {
@@ -190,9 +202,7 @@ export default function LessonChat({
       content: examMsg,
       timestamp: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, userMsg]);
-    setSending(true);
-    setError(null);
+    setMessages([userMsg]);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -203,6 +213,7 @@ export default function LessonChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           studentId,
+          studentName,
           courseId,
           lessonId,
           message: examMsg,
@@ -309,11 +320,11 @@ export default function LessonChat({
           להתחיל מחדש
         </button>
         <h2 style={{ fontSize: 18, flex: 1 }}>{lessonTitle}</h2>
-        {hasExam && !examStarted && (
+        {hasExam && (
           <button
             className="primary"
             onClick={handleStartExam}
-            disabled={sending || loadingHistory}
+            disabled={loadingHistory}
             style={{ whiteSpace: "nowrap" }}
           >
             אני רוצה להיבחן עכשיו
