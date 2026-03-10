@@ -78,29 +78,35 @@ export default function LessonChat({
     async function sendGreeting(): Promise<void> {
       if (cancelled) return;
       setSending(true);
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentId,
-          studentName,
-          courseId,
-          lessonId,
-          message: "!שלום! אני מוכן ללמוד את השיעור הזה",
-        }),
-      });
-      const greeting = (await res.json()) as ChatMessage;
-      if (cancelled) return;
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            studentId,
+            studentName,
+            courseId,
+            lessonId,
+            message: "!שלום! אני מוכן ללמוד את השיעור הזה",
+          }),
+        });
+        if (!res.ok) throw new Error("Chat API error");
+        const greeting = (await res.json()) as ChatMessage;
+        if (cancelled) return;
 
-      setMessages([
-        {
-          role: "user",
-          content: "!שלום! אני מוכן ללמוד את השיעור הזה",
-          timestamp: new Date().toISOString(),
-        },
-        greeting,
-      ]);
-      setSending(false);
+        setMessages([
+          {
+            role: "user",
+            content: "!שלום! אני מוכן ללמוד את השיעור הזה",
+            timestamp: new Date().toISOString(),
+          },
+          greeting,
+        ]);
+      } catch {
+        // If greeting fails, show a retry-able state
+        if (!cancelled) setMessages([]);
+      }
+      if (!cancelled) setSending(false);
     }
 
     loadHistory();
