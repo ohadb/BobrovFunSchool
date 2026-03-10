@@ -201,7 +201,10 @@ export default function LessonChat({
   }
 
   async function handleReset(): Promise<void> {
-    if (sending) return;
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
     setSending(true);
     setMessages([]);
     setExamStarted(false);
@@ -267,7 +270,7 @@ export default function LessonChat({
         <button
           className="danger"
           onClick={handleReset}
-          disabled={sending || loadingHistory}
+          disabled={loadingHistory}
           style={{ fontSize: 13 }}
         >
           להתחיל מחדש
