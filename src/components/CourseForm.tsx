@@ -76,6 +76,7 @@ export default function CourseForm({
   };
 
   const removeLesson = (index: number): void => {
+    if (!window.confirm("Are you sure you want to delete this lesson?")) return;
     setLessons(
       lessons
         .filter((_, i) => i !== index)

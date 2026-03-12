@@ -64,6 +64,7 @@ export default function Dashboard(): React.ReactElement {
   };
 
   const handleDelete = async (id: string): Promise<void> => {
+    if (!window.confirm("Are you sure you want to delete this course?")) return;
     await fetch(`/api/courses/${id}`, { method: "DELETE" });
     await fetchCourses();
   };
