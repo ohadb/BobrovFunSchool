@@ -11,6 +11,7 @@ interface LessonChatProps {
   lessonTitle: string;
   lessonContent: string;
   hasExam: boolean;
+  isHebrew?: boolean;
   onBack: () => void;
 }
 
@@ -19,6 +20,7 @@ export default function LessonChat({
   lessonId,
   lessonTitle,
   hasExam,
+  isHebrew,
   onBack,
 }: LessonChatProps): React.ReactElement {
   const studentId = getCurrentUserId();
@@ -345,7 +347,10 @@ export default function LessonChat({
           <div
             key={i}
             style={{
-              alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+              alignSelf:
+                isHebrew
+                  ? msg.role === "user" ? "flex-start" : "flex-end"
+                  : msg.role === "user" ? "flex-end" : "flex-start",
               maxWidth: "80%",
               padding: "10px 14px",
               borderRadius: 12,

@@ -43,6 +43,7 @@ export default function StudentPortal(): React.ReactElement {
         lessonTitle={selectedLesson.title}
         lessonContent={selectedLesson.content}
         hasExam={!!selectedLesson.exam}
+        isHebrew={selected.language === "he"}
         onBack={() => setSelectedLesson(null)}
       />
     );
