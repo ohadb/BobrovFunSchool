@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { getChatSession, saveChatMessage } from "@/lib/chatStore";
 import { getCourseById } from "@/lib/courseStore";
 import { saveExamResult } from "@/lib/examResultStore";
 import { getInterests } from "@/lib/interestsStore";
+import { chatCompletion } from "@/lib/llm";
 import type { ChatRequestBody, ChatMessage } from "@/types/chat";
-
-const anthropic = new Anthropic();
 
 export async function POST(
   request: Request,
@@ -68,15 +66,12 @@ export async function POST(
     { role: "user" as const, content: message },
   ];
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 1024,
-    system: systemPrompt,
-    messages: historyMessages,
-  });
-
-  const assistantContent =
-    response.content[0].type === "text" ? response.content[0].text : "";
+  const backend = course.llmBackend ?? "claude";
+  const assistantContent = await chatCompletion(
+    backend,
+    systemPrompt,
+    historyMessages,
+  );
 
   const assistantMessage: ChatMessage = {
     role: "assistant",

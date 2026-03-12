@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Course, CourseLanguage, Exam } from "@/types/course";
+import type { Course, CourseLanguage, LlmBackend, Exam } from "@/types/course";
 
 interface LessonInput {
   title: string;
@@ -16,6 +16,7 @@ interface CourseFormProps {
     name: string;
     description: string;
     language: CourseLanguage;
+    llmBackend: LlmBackend;
     lessons: LessonInput[];
   }) => Promise<void>;
   onCancel: () => void;
@@ -30,6 +31,9 @@ export default function CourseForm({
   const [description, setDescription] = useState(course?.description ?? "");
   const [language, setLanguage] = useState<CourseLanguage>(
     course?.language ?? "he",
+  );
+  const [llmBackend, setLlmBackend] = useState<LlmBackend>(
+    course?.llmBackend ?? "claude",
   );
   const [lessons, setLessons] = useState<LessonInput[]>(
     course?.lessons.map((l) => ({
@@ -159,7 +163,7 @@ export default function CourseForm({
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setSaving(true);
-    await onSave({ name, description, language, lessons });
+    await onSave({ name, description, language, llmBackend, lessons });
     setSaving(false);
   };
 
@@ -212,6 +216,28 @@ export default function CourseForm({
         >
           <option value="en">English</option>
           <option value="he">Hebrew (עברית)</option>
+        </select>
+      </div>
+
+      <div>
+        <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>
+          LLM Backend
+        </label>
+        <select
+          value={llmBackend}
+          onChange={(e) => setLlmBackend(e.target.value as LlmBackend)}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius)",
+            fontSize: 14,
+            fontFamily: "inherit",
+            background: "white",
+          }}
+        >
+          <option value="claude">Claude (Anthropic)</option>
+          <option value="gemini">Gemini (Google)</option>
         </select>
       </div>
 
