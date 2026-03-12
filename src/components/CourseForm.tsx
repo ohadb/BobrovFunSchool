@@ -40,6 +40,10 @@ export default function CourseForm({
     })) ?? [],
   );
   const [saving, setSaving] = useState(false);
+  const [examPreview, setExamPreview] = useState<Record<number, string>>({});
+  const [loadingPreview, setLoadingPreview] = useState<Record<number, boolean>>(
+    {},
+  );
 
   const addLesson = (): void => {
     setLessons([
@@ -63,10 +67,50 @@ export default function CourseForm({
     if (updated[index].exam) {
       const { exam: _, ...rest } = updated[index];
       updated[index] = rest as LessonInput;
+      setExamPreview((prev) => {
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      });
     } else {
       updated[index] = { ...updated[index], exam: { description: "" } };
+      generateExamPreview(index, updated[index]);
     }
     setLessons(updated);
+  };
+
+  const generateExamPreview = async (
+    index: number,
+    lesson: LessonInput,
+  ): Promise<void> => {
+    if (!lesson.title && !lesson.content) {
+      setExamPreview((prev) => ({
+        ...prev,
+        [index]: "Add lesson title and content first to see an exam preview.",
+      }));
+      return;
+    }
+    setLoadingPreview((prev) => ({ ...prev, [index]: true }));
+    try {
+      const res = await fetch("/api/exam-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseName: name,
+          lessonTitle: lesson.title,
+          lessonContent: lesson.content,
+          language,
+        }),
+      });
+      const data = (await res.json()) as { preview: string };
+      setExamPreview((prev) => ({ ...prev, [index]: data.preview }));
+    } catch {
+      setExamPreview((prev) => ({
+        ...prev,
+        [index]: "Failed to generate preview.",
+      }));
+    }
+    setLoadingPreview((prev) => ({ ...prev, [index]: false }));
   };
 
   const updateExamDescription = (index: number, description: string): void => {
@@ -218,13 +262,50 @@ export default function CourseForm({
                 {lesson.exam ? "Remove Exam" : "+ Add Exam"}
               </button>
               {lesson.exam && (
-                <textarea
-                  value={lesson.exam.description}
-                  onChange={(e) => updateExamDescription(index, e.target.value)}
-                  placeholder="Exam description (optional)"
-                  rows={2}
-                  style={{ marginTop: 8 }}
-                />
+                <>
+                  <textarea
+                    value={lesson.exam.description}
+                    onChange={(e) =>
+                      updateExamDescription(index, e.target.value)
+                    }
+                    placeholder="Exam description (optional)"
+                    rows={2}
+                    style={{ marginTop: 8 }}
+                  />
+                  {loadingPreview[index] && (
+                    <p
+                      style={{
+                        fontSize: 12,
+                        color: "var(--text-muted)",
+                        marginTop: 8,
+                      }}
+                    >
+                      Generating exam preview...
+                    </p>
+                  )}
+                  {examPreview[index] && !loadingPreview[index] && (
+                    <div
+                      dir={language === "he" ? "rtl" : "ltr"}
+                      style={{
+                        marginTop: 8,
+                        padding: 12,
+                        background: "#f0f4ff",
+                        border: "1px solid #c7d2fe",
+                        borderRadius: 6,
+                        fontSize: 13,
+                        lineHeight: 1.6,
+                        whiteSpace: "pre-wrap",
+                        color: "var(--text)",
+                      }}
+                    >
+                      <strong style={{ fontSize: 12, color: "var(--primary)" }}>
+                        Exam Preview:
+                      </strong>
+                      <br />
+                      {examPreview[index]}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
