@@ -29,7 +29,7 @@ export default function CourseForm({
   const [name, setName] = useState(course?.name ?? "");
   const [description, setDescription] = useState(course?.description ?? "");
   const [language, setLanguage] = useState<CourseLanguage>(
-    course?.language ?? "en",
+    course?.language ?? "he",
   );
   const [lessons, setLessons] = useState<LessonInput[]>(
     course?.lessons.map((l) => ({
