@@ -41,6 +41,7 @@ export default function CourseForm({
   );
   const [saving, setSaving] = useState(false);
   const [examPreview, setExamPreview] = useState<Record<number, string>>({});
+  const [examFeedback, setExamFeedback] = useState<Record<number, string>>({});
   const [loadingPreview, setLoadingPreview] = useState<Record<number, boolean>>(
     {},
   );
@@ -109,6 +110,33 @@ export default function CourseForm({
         ...prev,
         [index]: "Failed to generate preview.",
       }));
+    }
+    setLoadingPreview((prev) => ({ ...prev, [index]: false }));
+  };
+
+  const applyFeedback = async (index: number): Promise<void> => {
+    const feedback = (examFeedback[index] ?? "").trim();
+    if (!feedback || !examPreview[index]) return;
+    const lesson = lessons[index];
+    setLoadingPreview((prev) => ({ ...prev, [index]: true }));
+    try {
+      const res = await fetch("/api/exam-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseName: name,
+          lessonTitle: lesson.title,
+          lessonContent: lesson.content,
+          language,
+          currentPreview: examPreview[index],
+          feedback,
+        }),
+      });
+      const data = (await res.json()) as { preview: string };
+      setExamPreview((prev) => ({ ...prev, [index]: data.preview }));
+      setExamFeedback((prev) => ({ ...prev, [index]: "" }));
+    } catch {
+      // keep current preview
     }
     setLoadingPreview((prev) => ({ ...prev, [index]: false }));
   };
@@ -263,15 +291,6 @@ export default function CourseForm({
               </button>
               {lesson.exam && (
                 <>
-                  <textarea
-                    value={lesson.exam.description}
-                    onChange={(e) =>
-                      updateExamDescription(index, e.target.value)
-                    }
-                    placeholder="Exam description (optional)"
-                    rows={2}
-                    style={{ marginTop: 8 }}
-                  />
                   {loadingPreview[index] && (
                     <p
                       style={{
@@ -303,6 +322,51 @@ export default function CourseForm({
                       </strong>
                       <br />
                       {examPreview[index]}
+                    </div>
+                  )}
+                  {examPreview[index] && !loadingPreview[index] && (
+                    <div style={{ marginTop: 8 }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 12,
+                          fontWeight: 500,
+                          marginBottom: 4,
+                          color: "var(--text-muted)",
+                        }}
+                      >
+                        Exam Feedback
+                      </label>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <textarea
+                          value={examFeedback[index] ?? ""}
+                          onChange={(e) =>
+                            setExamFeedback((prev) => ({
+                              ...prev,
+                              [index]: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. make questions easier, add word problems, focus on division..."
+                          rows={2}
+                          style={{ flex: 1 }}
+                        />
+                        <button
+                          type="button"
+                          className="primary"
+                          onClick={() => applyFeedback(index)}
+                          disabled={
+                            !(examFeedback[index] ?? "").trim() ||
+                            loadingPreview[index]
+                          }
+                          style={{
+                            alignSelf: "flex-end",
+                            whiteSpace: "nowrap",
+                            fontSize: 12,
+                          }}
+                        >
+                          Apply Feedback
+                        </button>
+                      </div>
                     </div>
                   )}
                 </>
