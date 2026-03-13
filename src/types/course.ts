@@ -3,6 +3,7 @@ export type LlmBackend = "claude" | "gemini";
 
 export interface Exam {
   description: string;
+  preview?: string;
 }
 
 export interface Lesson {

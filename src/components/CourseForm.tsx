@@ -46,7 +46,15 @@ export default function CourseForm({
     })) ?? [],
   );
   const [saving, setSaving] = useState(false);
-  const [examPreview, setExamPreview] = useState<Record<number, string>>({});
+  const [examPreview, setExamPreview] = useState<Record<number, string>>(
+    () => {
+      const initial: Record<number, string> = {};
+      course?.lessons.forEach((l, i) => {
+        if (l.exam?.preview) initial[i] = l.exam.preview;
+      });
+      return initial;
+    },
+  );
   const [examFeedback, setExamFeedback] = useState<Record<number, string>>({});
   const [loadingPreview, setLoadingPreview] = useState<Record<number, boolean>>(
     {},
@@ -165,7 +173,13 @@ export default function CourseForm({
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setSaving(true);
-    await onSave({ name, description, language, llmBackend, lessons });
+    const lessonsWithPreview = lessons.map((l, i) => ({
+      ...l,
+      exam: l.exam
+        ? { ...l.exam, preview: examPreview[i] ?? l.exam.preview ?? "" }
+        : undefined,
+    }));
+    await onSave({ name, description, language, llmBackend, lessons: lessonsWithPreview });
     setSaving(false);
   };
 
