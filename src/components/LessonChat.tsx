@@ -32,6 +32,7 @@ export default function LessonChat({
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [examStarted, setExamStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastBackend, setLastBackend] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -97,8 +98,10 @@ export default function LessonChat({
           const errBody = await res.text();
           throw new Error(`API ${res.status}: ${errBody}`);
         }
-        const greeting = (await res.json()) as ChatMessage;
+        const data = (await res.json()) as ChatMessage & { llmBackend?: string };
+        const { llmBackend: usedBackend, ...greeting } = data;
         if (cancelled) return;
+        if (usedBackend) setLastBackend(usedBackend);
 
         setMessages([
           {
@@ -172,7 +175,9 @@ export default function LessonChat({
         const errBody = await res.text();
         throw new Error(`API ${res.status}: ${errBody}`);
       }
-      const reply = (await res.json()) as ChatMessage;
+      const data = (await res.json()) as ChatMessage & { llmBackend?: string };
+      const { llmBackend: usedBackend, ...reply } = data;
+      if (usedBackend) setLastBackend(usedBackend);
       setMessages((prev) => [...prev, reply]);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -220,7 +225,9 @@ export default function LessonChat({
         const errBody = await res.text();
         throw new Error(`API ${res.status}: ${errBody}`);
       }
-      const reply = (await res.json()) as ChatMessage;
+      const data = (await res.json()) as ChatMessage & { llmBackend?: string };
+      const { llmBackend: usedBackend, ...reply } = data;
+      if (usedBackend) setLastBackend(usedBackend);
       setMessages((prev) => [...prev, reply]);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -261,7 +268,9 @@ export default function LessonChat({
         const errBody = await res.text();
         throw new Error(`API ${res.status}: ${errBody}`);
       }
-      const greeting = (await res.json()) as ChatMessage;
+      const data = (await res.json()) as ChatMessage & { llmBackend?: string };
+      const { llmBackend: usedBackend, ...greeting } = data;
+      if (usedBackend) setLastBackend(usedBackend);
       setMessages([
         {
           role: "user",
@@ -429,6 +438,26 @@ export default function LessonChat({
 
         <div ref={bottomRef} />
       </div>
+
+      {lastBackend && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 8,
+            left: 8,
+            background: lastBackend === "gemini" ? "#1a73e8" : "#6d28d9",
+            color: "#fff",
+            fontSize: 11,
+            padding: "2px 8px",
+            borderRadius: 4,
+            zIndex: 9999,
+            fontFamily: "monospace",
+            direction: "ltr",
+          }}
+        >
+          LLM: {lastBackend}
+        </div>
+      )}
 
       <div
         style={{

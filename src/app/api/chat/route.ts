@@ -93,7 +93,7 @@ export async function POST(
     }
   }
 
-  return NextResponse.json(assistantMessage);
+  return NextResponse.json({ ...assistantMessage, llmBackend: backend });
 }
 
 function buildSystemPrompt(
