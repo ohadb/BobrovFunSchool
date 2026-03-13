@@ -142,7 +142,7 @@ function buildExamPrompt(
   const lang = isHebrew ? "Hebrew (עברית)" : "English";
   const interestsLine =
     interests.length > 0
-      ? `\n- The student has the following topics of interest: ${interests.join(", ")}. Whenever possible, frame questions using scenarios or examples related to these topics.`
+      ? `\n- The student has the following topics of interest: ${interests.join(", ")}. Whenever possible, frame questions using scenarios or examples related to some of these topics.`
       : "";
   return `You are a friendly female examiner for kids. You are testing a student named ${studentName} on a lesson from the course "${courseName}".
 
