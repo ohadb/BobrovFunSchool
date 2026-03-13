@@ -34,7 +34,7 @@ async function geminiCompletion(
   messages: { role: "user" | "assistant"; content: string }[],
 ): Promise<string> {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     systemInstruction: systemPrompt,
   });
 
