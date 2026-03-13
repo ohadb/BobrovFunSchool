@@ -45,7 +45,7 @@ export async function GET(
 
   const backend = course.llmBackend ?? "claude";
   const systemPrompt = `You are an educational analyst helping parents understand their child's learning progress. Analyze the chat transcript between a student and their AI tutor. Write in Hebrew. Be concise and actionable.`;
-  const analysis = await chatCompletion(backend, systemPrompt, [
+  const result = await chatCompletion(backend, systemPrompt, [
     {
       role: "user",
       content: `Analyze the following study session for student "${studentName}" on the lesson "${lesson.title}" from course "${course.name}".
@@ -64,5 +64,5 @@ Keep it concise — 4-6 sentences.`,
     },
   ]);
 
-  return NextResponse.json({ analysis });
+  return NextResponse.json({ analysis: result.text });
 }

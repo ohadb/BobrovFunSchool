@@ -5,11 +5,16 @@ import type { LlmBackend } from "@/types/course";
 const anthropic = new Anthropic();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 
+export interface LlmResult {
+  text: string;
+  debug: string;
+}
+
 export async function chatCompletion(
   backend: LlmBackend,
   systemPrompt: string,
   messages: { role: "user" | "assistant"; content: string }[],
-): Promise<string> {
+): Promise<LlmResult> {
   if (backend === "gemini") {
     return geminiCompletion(systemPrompt, messages);
   }
@@ -19,22 +24,28 @@ export async function chatCompletion(
 async function claudeCompletion(
   systemPrompt: string,
   messages: { role: "user" | "assistant"; content: string }[],
-): Promise<string> {
+): Promise<LlmResult> {
+  const model = "claude-sonnet-4-20250514";
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model,
     max_tokens: 1024,
     system: systemPrompt,
     messages,
   });
-  return response.content[0].type === "text" ? response.content[0].text : "";
+  const text = response.content[0].type === "text" ? response.content[0].text : "";
+  return {
+    text,
+    debug: `Anthropic → ${model} (id: ${response.id})`,
+  };
 }
 
 async function geminiCompletion(
   systemPrompt: string,
   messages: { role: "user" | "assistant"; content: string }[],
-): Promise<string> {
+): Promise<LlmResult> {
+  const modelName = "gemini-2.5-flash";
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: modelName,
     systemInstruction: systemPrompt,
   });
 
@@ -46,5 +57,8 @@ async function geminiCompletion(
   const chat = model.startChat({ history });
   const lastMessage = messages[messages.length - 1].content;
   const result = await chat.sendMessage(lastMessage);
-  return result.response.text();
+  return {
+    text: result.response.text(),
+    debug: `Google GenAI → ${modelName}`,
+  };
 }

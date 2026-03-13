@@ -32,7 +32,7 @@ export default function LessonChat({
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [examStarted, setExamStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastBackend, setLastBackend] = useState<string | null>(null);
+  const [llmDebug, setLlmDebug] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -98,10 +98,10 @@ export default function LessonChat({
           const errBody = await res.text();
           throw new Error(`API ${res.status}: ${errBody}`);
         }
-        const data = (await res.json()) as ChatMessage & { llmBackend?: string };
-        const { llmBackend: usedBackend, ...greeting } = data;
+        const data = (await res.json()) as ChatMessage & { llmDebug?: string };
+        const { llmDebug: debugInfo, ...greeting } = data;
         if (cancelled) return;
-        if (usedBackend) setLastBackend(usedBackend);
+        if (debugInfo) setLlmDebug(debugInfo);
 
         setMessages([
           {
@@ -175,9 +175,9 @@ export default function LessonChat({
         const errBody = await res.text();
         throw new Error(`API ${res.status}: ${errBody}`);
       }
-      const data = (await res.json()) as ChatMessage & { llmBackend?: string };
-      const { llmBackend: usedBackend, ...reply } = data;
-      if (usedBackend) setLastBackend(usedBackend);
+      const data = (await res.json()) as ChatMessage & { llmDebug?: string };
+      const { llmDebug: debugInfo, ...reply } = data;
+      if (debugInfo) setLlmDebug(debugInfo);
       setMessages((prev) => [...prev, reply]);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -225,9 +225,9 @@ export default function LessonChat({
         const errBody = await res.text();
         throw new Error(`API ${res.status}: ${errBody}`);
       }
-      const data = (await res.json()) as ChatMessage & { llmBackend?: string };
-      const { llmBackend: usedBackend, ...reply } = data;
-      if (usedBackend) setLastBackend(usedBackend);
+      const data = (await res.json()) as ChatMessage & { llmDebug?: string };
+      const { llmDebug: debugInfo, ...reply } = data;
+      if (debugInfo) setLlmDebug(debugInfo);
       setMessages((prev) => [...prev, reply]);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
@@ -268,9 +268,9 @@ export default function LessonChat({
         const errBody = await res.text();
         throw new Error(`API ${res.status}: ${errBody}`);
       }
-      const data = (await res.json()) as ChatMessage & { llmBackend?: string };
-      const { llmBackend: usedBackend, ...greeting } = data;
-      if (usedBackend) setLastBackend(usedBackend);
+      const data = (await res.json()) as ChatMessage & { llmDebug?: string };
+      const { llmDebug: debugInfo, ...greeting } = data;
+      if (debugInfo) setLlmDebug(debugInfo);
       setMessages([
         {
           role: "user",
@@ -439,23 +439,23 @@ export default function LessonChat({
         <div ref={bottomRef} />
       </div>
 
-      {lastBackend && (
+      {llmDebug && (
         <div
           style={{
             position: "fixed",
             bottom: 8,
             left: 8,
-            background: lastBackend === "gemini" ? "#1a73e8" : "#6d28d9",
-            color: "#fff",
+            background: "#333",
+            color: "#0f0",
             fontSize: 11,
-            padding: "2px 8px",
+            padding: "4px 8px",
             borderRadius: 4,
             zIndex: 9999,
             fontFamily: "monospace",
             direction: "ltr",
           }}
         >
-          LLM: {lastBackend}
+          {llmDebug}
         </div>
       )}
 

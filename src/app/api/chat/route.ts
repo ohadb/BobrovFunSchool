@@ -67,7 +67,7 @@ export async function POST(
   ];
 
   const backend = course.llmBackend ?? "claude";
-  const assistantContent = await chatCompletion(
+  const llmResult = await chatCompletion(
     backend,
     systemPrompt,
     historyMessages,
@@ -75,13 +75,13 @@ export async function POST(
 
   const assistantMessage: ChatMessage = {
     role: "assistant",
-    content: assistantContent,
+    content: llmResult.text,
     timestamp: new Date().toISOString(),
   };
   await saveChatMessage(studentId, courseId, lessonId, assistantMessage);
 
   if (examMode) {
-    const scoreMatch = assistantContent.match(/\[SCORE:\s*(\d+)\/(\d+)\]/);
+    const scoreMatch = llmResult.text.match(/\[SCORE:\s*(\d+)\/(\d+)\]/);
     if (scoreMatch) {
       await saveExamResult(
         studentId,
@@ -93,7 +93,7 @@ export async function POST(
     }
   }
 
-  return NextResponse.json({ ...assistantMessage, llmBackend: backend });
+  return NextResponse.json({ ...assistantMessage, llmDebug: llmResult.debug });
 }
 
 function buildSystemPrompt(

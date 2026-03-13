@@ -50,9 +50,9 @@ Requirements:
 - Just list the 5 questions numbered 1-5, nothing else.
 - Keep them age-appropriate and concise.`;
 
-  const preview = await chatCompletion(backend, "", [
+  const result = await chatCompletion(backend, "", [
     { role: "user", content: prompt },
   ]);
 
-  return NextResponse.json({ preview });
+  return NextResponse.json({ preview: result.text });
 }
