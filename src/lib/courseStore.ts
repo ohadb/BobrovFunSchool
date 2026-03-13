@@ -61,7 +61,7 @@ export async function updateCourse(
     language: input.language ?? existing.language,
     llmBackend: input.llmBackend ?? existing.llmBackend ?? "claude",
     lessons: input.lessons
-      ? input.lessons.map((l) => ({ ...l, id: generateId() }))
+      ? input.lessons.map((l) => ({ ...l, id: l.id ?? generateId() }))
       : existing.lessons,
     updatedAt: new Date().toISOString(),
   };

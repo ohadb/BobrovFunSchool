@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Course, CourseLanguage, LlmBackend, Exam } from "@/types/course";
 
 interface LessonInput {
+  id?: string;
   title: string;
   content: string;
   order: number;
@@ -37,6 +38,7 @@ export default function CourseForm({
   );
   const [lessons, setLessons] = useState<LessonInput[]>(
     course?.lessons.map((l) => ({
+      id: l.id,
       title: l.title,
       content: l.content,
       order: l.order,

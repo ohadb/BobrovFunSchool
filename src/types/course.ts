@@ -37,5 +37,5 @@ export interface UpdateCourseInput {
   description?: string;
   language?: CourseLanguage;
   llmBackend?: LlmBackend;
-  lessons?: Omit<Lesson, "id">[];
+  lessons?: (Omit<Lesson, "id"> & { id?: string })[];
 }
