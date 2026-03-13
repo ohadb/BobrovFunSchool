@@ -48,6 +48,7 @@ export async function POST(
         studentName,
         isHebrew,
         interests,
+        lesson.exam?.preview,
       )
     : buildSystemPrompt(
         course.name,
@@ -136,6 +137,7 @@ function buildExamPrompt(
   studentName: string,
   isHebrew: boolean,
   interests: string[],
+  examPreview?: string,
 ): string {
   const lang = isHebrew ? "Hebrew (עברית)" : "English";
   const interestsLine =
@@ -159,5 +161,5 @@ Instructions:
 - Be encouraging and supportive, even when the answer is wrong.
 - After all questions are done, give a short summary of how they did.
 - At the very end of the summary message, add the score in this exact format: [SCORE: X/Y] where X is correct answers and Y is total questions. This marker is required.
-- Keep responses concise and age-appropriate.${interestsLine}`;
+- Keep responses concise and age-appropriate.${interestsLine}${examPreview ? `\n\nHere is an example of the kind of questions you should generate (use these as a reference for style and difficulty, but generate fresh different questions):\n${examPreview}` : ""}`;
 }
