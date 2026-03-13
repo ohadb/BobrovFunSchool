@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic();
+import { chatCompletion } from "@/lib/llm";
+import type { LlmBackend } from "@/types/course";
 
 export async function POST(
   request: Request,
@@ -11,9 +10,12 @@ export async function POST(
     lessonTitle: string;
     lessonContent: string;
     language: string;
+    llmBackend?: LlmBackend;
     currentPreview?: string;
     feedback?: string;
   };
+
+  const backend: LlmBackend = body.llmBackend ?? "claude";
 
   const lang = body.language === "he" ? "Hebrew (עברית)" : "English";
 
@@ -48,14 +50,9 @@ Requirements:
 - Just list the 5 questions numbered 1-5, nothing else.
 - Keep them age-appropriate and concise.`;
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: 512,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const preview =
-    response.content[0].type === "text" ? response.content[0].text : "";
+  const preview = await chatCompletion(backend, "", [
+    { role: "user", content: prompt },
+  ]);
 
   return NextResponse.json({ preview });
 }

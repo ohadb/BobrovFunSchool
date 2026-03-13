@@ -115,6 +115,7 @@ export default function CourseForm({
           lessonTitle: lesson.title,
           lessonContent: lesson.content,
           language,
+          llmBackend,
         }),
       });
       const data = (await res.json()) as { preview: string };
@@ -142,6 +143,7 @@ export default function CourseForm({
           lessonTitle: lesson.title,
           lessonContent: lesson.content,
           language,
+          llmBackend,
           currentPreview: examPreview[index],
           feedback,
         }),
