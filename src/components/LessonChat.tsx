@@ -15,6 +15,62 @@ interface LessonChatProps {
   onBack: () => void;
 }
 
+const CONFETTI_COLORS = ["#f97316", "#fbbf24", "#34d399", "#60a5fa", "#f472b6", "#a78bfa", "#fb923c"];
+
+function Confetti(): React.ReactElement {
+  const pieces = Array.from({ length: 40 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    delay: Math.random() * 2,
+    size: 6 + Math.random() * 8,
+    shape: Math.random() > 0.5 ? "circle" : "square",
+  }));
+
+  return (
+    <>
+      {pieces.map((p) => (
+        <div
+          key={p.id}
+          className="confetti-piece"
+          style={{
+            left: `${p.left}%`,
+            background: p.color,
+            width: p.size,
+            height: p.size,
+            borderRadius: p.shape === "circle" ? "50%" : "2px",
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+function ThinkingDots(): React.ReactElement {
+  return (
+    <div
+      style={{
+        alignSelf: "flex-end",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "10px 16px",
+        background: "#fff7ed",
+        border: "1px solid #fed7aa",
+        borderRadius: "16px 16px 4px 16px",
+      }}
+    >
+      <span style={{ fontSize: 20 }}>👩‍🏫</span>
+      <div className="thinking-dots">
+        <span />
+        <span />
+        <span />
+      </div>
+    </div>
+  );
+}
+
 export default function LessonChat({
   courseId,
   lessonId,
@@ -33,6 +89,7 @@ export default function LessonChat({
   const [examStarted, setExamStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [llmDebug, setLlmDebug] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -58,6 +115,16 @@ export default function LessonChat({
       }
     };
   }, [studentId]);
+
+  // Check for exam score in messages to trigger confetti
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg?.role === "assistant" && lastMsg.content.match(/\[SCORE:\s*\d+\/\d+\]/)) {
+      setShowConfetti(true);
+      const timer = setTimeout(() => setShowConfetti(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [messages]);
 
   useEffect(() => {
     let cancelled = false;
@@ -132,7 +199,6 @@ export default function LessonChat({
       abortRef.current.abort();
       abortRef.current = null;
     }
-    // Remove the last user message from UI and server
     setMessages((prev) => prev.slice(0, -1));
     fetch(
       `/api/chat/history?studentId=${studentId}&courseId=${courseId}&lessonId=${lessonId}`,
@@ -295,6 +361,7 @@ export default function LessonChat({
   return (
     <div
       dir="rtl"
+      className="student-theme student-chat"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -304,34 +371,73 @@ export default function LessonChat({
         padding: "16px 16px 0",
       }}
     >
+      {showConfetti && <Confetti />}
+
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 12,
+          gap: 10,
           marginBottom: 16,
+          background: "#fff",
+          padding: "12px 16px",
+          borderRadius: 16,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
         }}
       >
-        <button className="secondary" onClick={onBack}>
+        <button
+          onClick={onBack}
+          style={{
+            background: "#fff7ed",
+            border: "2px solid #fed7aa",
+            borderRadius: 10,
+            padding: "6px 14px",
+            fontSize: 13,
+            fontWeight: 600,
+            color: "#f97316",
+            cursor: "pointer",
+          }}
+        >
           חזרה →
         </button>
         <button
-          className="danger"
           onClick={handleReset}
           disabled={loadingHistory}
-          style={{ fontSize: 13 }}
+          style={{
+            background: "#fef2f2",
+            border: "2px solid #fecaca",
+            borderRadius: 10,
+            padding: "6px 14px",
+            fontSize: 13,
+            fontWeight: 600,
+            color: "#ef4444",
+            cursor: "pointer",
+            opacity: loadingHistory ? 0.5 : 1,
+          }}
         >
           להתחיל מחדש
         </button>
-        <h2 style={{ fontSize: 18, flex: 1 }}>{lessonTitle}</h2>
+        <h2 style={{ fontSize: 17, flex: 1, color: "#1c1917" }}>
+          📖 {lessonTitle}
+        </h2>
         {hasExam && (
           <button
-            className="primary"
             onClick={handleStartExam}
             disabled={loadingHistory}
-            style={{ whiteSpace: "nowrap" }}
+            style={{
+              background: "linear-gradient(135deg, #f97316, #fb923c)",
+              border: "none",
+              borderRadius: 10,
+              padding: "8px 16px",
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#fff",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              opacity: loadingHistory ? 0.5 : 1,
+            }}
           >
-            אני רוצה להיבחן עכשיו
+            📝 אני רוצה להיבחן
           </button>
         )}
       </div>
@@ -347,48 +453,80 @@ export default function LessonChat({
         }}
       >
         {loadingHistory && (
-          <p style={{ color: "var(--text-muted)", textAlign: "center" }}>
-            טוען צ׳אט...
-          </p>
+          <div style={{ textAlign: "center", padding: 40 }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>📖</div>
+            <p style={{ color: "#78716c" }}>טוען צ׳אט...</p>
+          </div>
         )}
 
         {messages.map((msg, i) => (
           <div
             key={i}
             style={{
+              display: "flex",
+              flexDirection: isHebrew
+                ? msg.role === "user" ? "row" : "row-reverse"
+                : msg.role === "user" ? "row-reverse" : "row",
+              alignItems: "flex-end",
+              gap: 8,
+              maxWidth: "85%",
               alignSelf:
                 isHebrew
                   ? msg.role === "user" ? "flex-start" : "flex-end"
                   : msg.role === "user" ? "flex-end" : "flex-start",
-              maxWidth: "80%",
-              padding: "10px 14px",
-              borderRadius: 12,
-              background:
-                msg.role === "user" ? "var(--primary)" : "var(--card-bg)",
-              color: msg.role === "user" ? "white" : "var(--text)",
-              border:
-                msg.role === "assistant" ? "1px solid var(--border)" : "none",
-              fontSize: 14,
-              lineHeight: 1.5,
-              whiteSpace: "pre-wrap",
             }}
           >
-            {msg.content}
-            {msg.images && msg.images.length > 0 && (
-              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
-                {msg.images.map((imgId) => (
-                  <img
-                    key={imgId}
-                    src={`/api/image/${imgId}`}
-                    alt="illustration"
-                    style={{
-                      maxWidth: "100%",
-                      borderRadius: 8,
-                    }}
-                  />
-                ))}
+            {msg.role === "assistant" && (
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #fbbf24, #f97316)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  flexShrink: 0,
+                }}
+              >
+                👩‍🏫
               </div>
             )}
+            <div
+              style={{
+                padding: "12px 16px",
+                borderRadius: msg.role === "user"
+                  ? "16px 16px 16px 4px"
+                  : "16px 16px 4px 16px",
+                background: msg.role === "user"
+                  ? "linear-gradient(135deg, #f97316, #fb923c)"
+                  : "#fff7ed",
+                color: msg.role === "user" ? "white" : "#1c1917",
+                border: msg.role === "assistant" ? "1px solid #fed7aa" : "none",
+                fontSize: 15,
+                lineHeight: 1.6,
+                whiteSpace: "pre-wrap",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+              }}
+            >
+              {msg.content}
+              {msg.images && msg.images.length > 0 && (
+                <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+                  {msg.images.map((imgId) => (
+                    <img
+                      key={imgId}
+                      src={`/api/image/${imgId}`}
+                      alt="illustration"
+                      style={{
+                        maxWidth: "100%",
+                        borderRadius: 12,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ))}
 
@@ -397,13 +535,14 @@ export default function LessonChat({
             style={{
               alignSelf: "center",
               background: "#fef2f2",
-              border: "1px solid #fecaca",
-              borderRadius: 12,
-              padding: "16px 20px",
+              border: "2px solid #fecaca",
+              borderRadius: 16,
+              padding: "20px 24px",
               maxWidth: "90%",
               textAlign: "center",
             }}
           >
+            <p style={{ fontSize: 24, marginBottom: 8 }}>😰</p>
             <p style={{ fontSize: 16, fontWeight: 600, color: "#b91c1c", marginBottom: 8 }}>
               אוי לא, משהו השתבש!
             </p>
@@ -416,7 +555,7 @@ export default function LessonChat({
                 color: "#999",
                 background: "#f9fafb",
                 padding: 8,
-                borderRadius: 6,
+                borderRadius: 8,
                 fontFamily: "monospace",
                 wordBreak: "break-all",
                 textAlign: "left",
@@ -428,28 +567,7 @@ export default function LessonChat({
           </div>
         )}
 
-        {sending && (
-          <div
-            style={{
-              alignSelf: "flex-start",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "10px 14px",
-            }}
-          >
-            <span style={{ color: "var(--text-muted)", fontSize: 14 }}>
-              חושב...
-            </span>
-            <button
-              className="secondary"
-              onClick={handleStop}
-              style={{ fontSize: 12, padding: "4px 10px" }}
-            >
-              תפסיק לחשוב
-            </button>
-          </div>
-        )}
+        {sending && <ThinkingDots />}
 
         <div ref={bottomRef} />
       </div>
@@ -479,23 +597,42 @@ export default function LessonChat({
           display: "flex",
           gap: 8,
           padding: "12px 0 16px",
-          borderTop: "1px solid var(--border)",
+          borderTop: "1px solid #fed7aa",
         }}
       >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="כתבו הודעה..."
+          placeholder="כתבו הודעה... ✏️"
           disabled={sending}
-          style={{ flex: 1 }}
+          style={{
+            flex: 1,
+            padding: "12px 16px",
+            border: "2px solid #fed7aa",
+            borderRadius: 14,
+            fontSize: 15,
+            fontFamily: "inherit",
+            background: "#fff",
+          }}
         />
         <button
-          className="primary"
           onClick={handleSend}
           disabled={sending || !input.trim()}
+          style={{
+            background: sending || !input.trim()
+              ? "#e5e7eb"
+              : "linear-gradient(135deg, #f97316, #fb923c)",
+            border: "none",
+            borderRadius: 14,
+            padding: "12px 20px",
+            fontSize: 16,
+            fontWeight: 700,
+            color: sending || !input.trim() ? "#9ca3af" : "#fff",
+            cursor: sending || !input.trim() ? "default" : "pointer",
+          }}
         >
-          שלח
+          🚀
         </button>
       </div>
     </div>
