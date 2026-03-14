@@ -81,6 +81,7 @@ export async function POST(
   );
 
   const imageIds: string[] = [];
+  console.log(`[chat] backend=${backend} images=${llmResult.images.length} debug=${llmResult.debug}`);
   for (const img of llmResult.images) {
     const id = await saveImage(img.base64, img.mimeType);
     imageIds.push(id);
