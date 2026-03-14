@@ -35,7 +35,7 @@ export async function createCourse(input: CreateCourseInput): Promise<Course> {
     name: input.name,
     description: input.description,
     language: input.language,
-    llmBackend: input.llmBackend ?? "claude",
+    llmBackend: input.llmBackend ?? "gemini",
     lessons: input.lessons.map((l) => ({ ...l, id: generateId() })),
     createdAt: now,
     updatedAt: now,
@@ -59,7 +59,7 @@ export async function updateCourse(
     name: input.name ?? existing.name,
     description: input.description ?? existing.description,
     language: input.language ?? existing.language,
-    llmBackend: input.llmBackend ?? existing.llmBackend ?? "claude",
+    llmBackend: input.llmBackend ?? existing.llmBackend ?? "gemini",
     lessons: input.lessons
       ? input.lessons.map((l) => ({ ...l, id: l.id ?? generateId() }))
       : existing.lessons,

@@ -15,7 +15,7 @@ export async function POST(
     feedback?: string;
   };
 
-  const backend: LlmBackend = body.llmBackend ?? "claude";
+  const backend: LlmBackend = body.llmBackend ?? "gemini";
 
   const lang = body.language === "he" ? "Hebrew (עברית)" : "English";
 

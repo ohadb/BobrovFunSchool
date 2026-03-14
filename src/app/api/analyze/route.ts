@@ -43,7 +43,7 @@ export async function GET(
     .map((m) => `${m.role === "user" ? studentName : "Tutor"}: ${m.content}`)
     .join("\n\n");
 
-  const backend = course.llmBackend ?? "claude";
+  const backend = course.llmBackend ?? "gemini";
   const systemPrompt = `You are an educational analyst helping parents understand their child's learning progress. Analyze the chat transcript between a student and their AI tutor. Write in Hebrew. Be concise and actionable.`;
   const result = await chatCompletion(backend, systemPrompt, [
     {

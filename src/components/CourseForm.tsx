@@ -34,7 +34,7 @@ export default function CourseForm({
     course?.language ?? "he",
   );
   const [llmBackend, setLlmBackend] = useState<LlmBackend>(
-    course?.llmBackend ?? "claude",
+    course?.llmBackend ?? "gemini",
   );
   const [lessons, setLessons] = useState<LessonInput[]>(
     course?.lessons.map((l) => ({
