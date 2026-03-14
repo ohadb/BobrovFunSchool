@@ -37,8 +37,9 @@ Apply the feedback and generate a revised set of 5 exam questions.
 Requirements:
 - Write in ${lang}.
 - All questions must have numeric answers.
-- Just list the 5 questions numbered 1-5, nothing else.
-- Keep them age-appropriate and concise.`
+- List the 5 questions numbered 1-5.
+- Keep them age-appropriate and concise.
+- When a question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student.`
       : `Generate a preview of 5 exam questions for a kids lesson.
 
 Course: "${body.courseName}"
@@ -48,8 +49,9 @@ Content: ${body.lessonContent}
 Requirements:
 - Write in ${lang}.
 - All questions must have numeric answers.
-- Just list the 5 questions numbered 1-5, nothing else.
-- Keep them age-appropriate and concise.`;
+- List the 5 questions numbered 1-5.
+- Keep them age-appropriate and concise.
+- When a question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student.`;
 
   const enableImages = backend === "gemini";
   const result = await chatCompletion(backend, "", [
