@@ -52,7 +52,7 @@ async function geminiCompletion(
   messages: { role: "user" | "assistant"; content: string }[],
   enableImages?: boolean,
 ): Promise<LlmResult> {
-  const modelName = enableImages ? "gemini-2.5-flash-preview-04-17" : "gemini-2.5-flash";
+  const modelName = enableImages ? "gemini-3.1-flash-image-preview" : "gemini-2.5-flash";
 
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
