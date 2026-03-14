@@ -59,6 +59,7 @@ export default function CourseForm({
   const [loadingPreview, setLoadingPreview] = useState<Record<number, boolean>>(
     {},
   );
+  const [previewImages, setPreviewImages] = useState<Record<number, string[]>>({});
   const [previewCollapsed, setPreviewCollapsed] = useState<Record<number, boolean>>(
     () => {
       const initial: Record<number, boolean> = {};
@@ -127,8 +128,9 @@ export default function CourseForm({
           llmBackend,
         }),
       });
-      const data = (await res.json()) as { preview: string };
+      const data = (await res.json()) as { preview: string; images?: string[] };
       setExamPreview((prev) => ({ ...prev, [index]: data.preview }));
+      setPreviewImages((prev) => ({ ...prev, [index]: data.images ?? [] }));
       setPreviewCollapsed((prev) => ({ ...prev, [index]: true }));
     } catch {
       setExamPreview((prev) => ({
@@ -158,8 +160,9 @@ export default function CourseForm({
           feedback,
         }),
       });
-      const data = (await res.json()) as { preview: string };
+      const data = (await res.json()) as { preview: string; images?: string[] };
       setExamPreview((prev) => ({ ...prev, [index]: data.preview }));
+      setPreviewImages((prev) => ({ ...prev, [index]: data.images ?? [] }));
       setPreviewCollapsed((prev) => ({ ...prev, [index]: true }));
       setExamFeedback((prev) => ({ ...prev, [index]: "" }));
     } catch {
@@ -387,6 +390,18 @@ export default function CourseForm({
                           }}
                         >
                           {examPreview[index]}
+                          {(previewImages[index] ?? []).length > 0 && (
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                              {previewImages[index].map((imgId) => (
+                                <img
+                                  key={imgId}
+                                  src={`/api/image/${imgId}`}
+                                  alt="Exam preview illustration"
+                                  style={{ maxWidth: 200, borderRadius: 6, border: "1px solid #c7d2fe" }}
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

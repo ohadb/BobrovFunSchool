@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { chatCompletion } from "@/lib/llm";
+import { saveImage } from "@/lib/imageStore";
 import type { LlmBackend } from "@/types/course";
 
 export async function POST(
   request: Request,
-): Promise<NextResponse<{ preview: string }>> {
+): Promise<NextResponse<{ preview: string; images?: string[] }>> {
   const body = (await request.json()) as {
     courseName: string;
     lessonTitle: string;
@@ -50,9 +51,19 @@ Requirements:
 - Just list the 5 questions numbered 1-5, nothing else.
 - Keep them age-appropriate and concise.`;
 
+  const enableImages = backend === "gemini";
   const result = await chatCompletion(backend, "", [
     { role: "user", content: prompt },
-  ]);
+  ], enableImages);
 
-  return NextResponse.json({ preview: result.text });
+  const imageIds: string[] = [];
+  for (const img of result.images) {
+    const id = await saveImage(img.base64, img.mimeType);
+    imageIds.push(id);
+  }
+
+  return NextResponse.json({
+    preview: result.text,
+    ...(imageIds.length > 0 ? { images: imageIds } : {}),
+  });
 }
