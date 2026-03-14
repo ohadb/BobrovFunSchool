@@ -158,7 +158,15 @@ export default function Dashboard(): React.ReactElement {
             padding: 24,
           }}
         >
-          <h2 style={{ fontSize: 18, marginBottom: 16 }}>Create New Course</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <button
+              className="secondary"
+              onClick={() => setViewMode("list")}
+            >
+              ← Back
+            </button>
+            <h2 style={{ fontSize: 18 }}>Create New Course</h2>
+          </div>
           <CourseForm
             onSave={handleCreate}
             onCancel={() => setViewMode("list")}
@@ -175,7 +183,18 @@ export default function Dashboard(): React.ReactElement {
             padding: 24,
           }}
         >
-          <h2 style={{ fontSize: 18, marginBottom: 16 }}>Edit Course</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <button
+              className="secondary"
+              onClick={() => {
+                setViewMode("list");
+                setEditingCourse(undefined);
+              }}
+            >
+              ← Back
+            </button>
+            <h2 style={{ fontSize: 18 }}>Edit Course</h2>
+          </div>
           <CourseForm
             course={editingCourse}
             onSave={handleUpdate}
