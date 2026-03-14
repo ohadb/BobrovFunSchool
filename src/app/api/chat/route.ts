@@ -87,16 +87,18 @@ export async function POST(
     imageIds.push(id);
   }
 
+  const cleanText = stripMarkdown(llmResult.text);
+
   const assistantMessage: ChatMessage = {
     role: "assistant",
-    content: llmResult.text,
+    content: cleanText,
     ...(imageIds.length > 0 ? { images: imageIds } : {}),
     timestamp: new Date().toISOString(),
   };
   await saveChatMessage(studentId, courseId, lessonId, assistantMessage);
 
   if (examMode) {
-    const scoreMatch = llmResult.text.match(/\[SCORE:\s*(\d+)\/(\d+)\]/);
+    const scoreMatch = cleanText.match(/\[SCORE:\s*(\d+)\/(\d+)\]/);
     if (scoreMatch) {
       await saveExamResult(
         studentId,
@@ -184,4 +186,22 @@ Instructions:
 - At the very end of the summary message, add the score in this exact format: [SCORE: X/Y] where X is correct answers and Y is total questions. This marker is required.
 - Keep responses concise and age-appropriate.
 - NEVER link to external images or URLs. Do not use markdown image syntax or provide links to imgur or any other site.${interestsLine}${canGenerateImages ? `\n- When a question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student.` : ""}${examPreview ? `\n\nHere is an example of the kind of questions you should generate (use these as a reference for style and difficulty, but generate fresh different questions):\n${examPreview}` : ""}`;
+}
+
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "$1")   // **bold** → bold
+    .replace(/\*(.+?)\*/g, "$1")        // *italic* → italic
+    .replace(/__(.+?)__/g, "$1")        // __bold__ → bold
+    .replace(/_(.+?)_/g, "$1")          // _italic_ → italic
+    .replace(/^#{1,6}\s+/gm, "")        // # headers → plain text
+    .replace(/`([^`]+)`/g, "$1")        // `code` → code
+    .replace(/\$\$(.+?)\$\$/g, "$1")    // $$latex$$ → plain
+    .replace(/\$(.+?)\$/g, "$1")        // $latex$ → plain
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "$1/$2")  // \frac{a}{b} → a/b
+    .replace(/\\times/g, "×")
+    .replace(/\\div/g, "÷")
+    .replace(/\\cdot/g, "·")
+    .replace(/\\left|\\right/g, "")
+    .replace(/\\\\/g, "");
 }
