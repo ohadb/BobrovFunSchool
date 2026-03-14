@@ -131,7 +131,7 @@ export default function CourseForm({
       const data = (await res.json()) as { preview: string; images?: string[] };
       setExamPreview((prev) => ({ ...prev, [index]: data.preview }));
       setPreviewImages((prev) => ({ ...prev, [index]: data.images ?? [] }));
-      setPreviewCollapsed((prev) => ({ ...prev, [index]: true }));
+      setPreviewCollapsed((prev) => ({ ...prev, [index]: false }));
     } catch {
       setExamPreview((prev) => ({
         ...prev,
@@ -163,7 +163,7 @@ export default function CourseForm({
       const data = (await res.json()) as { preview: string; images?: string[] };
       setExamPreview((prev) => ({ ...prev, [index]: data.preview }));
       setPreviewImages((prev) => ({ ...prev, [index]: data.images ?? [] }));
-      setPreviewCollapsed((prev) => ({ ...prev, [index]: true }));
+      setPreviewCollapsed((prev) => ({ ...prev, [index]: false }));
       setExamFeedback((prev) => ({ ...prev, [index]: "" }));
     } catch {
       // keep current preview
