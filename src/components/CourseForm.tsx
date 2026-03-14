@@ -299,7 +299,7 @@ export default function CourseForm({
               }}
             >
               <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                Lesson {lesson.order}{lesson.id && <span style={{ fontSize: 11, marginInlineStart: 8, opacity: 0.6 }}>({lesson.id})</span>}
+                Lesson {lesson.order}{lesson.id && <span style={{ fontSize: 11, marginInlineStart: 8, opacity: 0.6 }}>({lesson.id})<button type="button" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(lesson.id!); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11, padding: "0 4px", opacity: 0.6 }} title="Copy UUID">📋</button></span>}
               </span>
               <button
                 type="button"
