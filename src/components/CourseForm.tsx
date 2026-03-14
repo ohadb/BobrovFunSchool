@@ -327,14 +327,27 @@ export default function CourseForm({
               rows={2}
             />
             <div style={{ marginTop: 8 }}>
-              <button
-                type="button"
-                className="secondary"
-                style={{ padding: "4px 8px", fontSize: 12 }}
-                onClick={() => toggleExam(index)}
-              >
-                {lesson.exam ? "Remove Exam" : "+ Add Exam"}
-              </button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  className="secondary"
+                  style={{ padding: "4px 8px", fontSize: 12 }}
+                  onClick={() => toggleExam(index)}
+                >
+                  {lesson.exam ? "Remove Exam" : "+ Add Exam"}
+                </button>
+                {lesson.exam && (
+                  <button
+                    type="button"
+                    className="secondary"
+                    style={{ padding: "4px 8px", fontSize: 12 }}
+                    onClick={() => generateExamPreview(index, lesson)}
+                    disabled={loadingPreview[index]}
+                  >
+                    Refresh Exam
+                  </button>
+                )}
+              </div>
               {lesson.exam && (
                 <>
                   {loadingPreview[index] && (
