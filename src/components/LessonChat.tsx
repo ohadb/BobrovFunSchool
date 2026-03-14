@@ -5,6 +5,22 @@ import type { ChatMessage } from "@/types/chat";
 import { getCurrentUserId } from "@/lib/auth";
 import { APP_USERS } from "@/types/user";
 
+interface Theme {
+  id: string;
+  label: string;
+  gradient: string;
+  primary: string;
+  primaryHover: string;
+  border: string;
+  bubbleBg: string;
+}
+
+const DEFAULT_THEME: Theme = {
+  id: "warm", label: "🧡",
+  gradient: "linear-gradient(135deg, #fef3c7 0%, #fce7f3 50%, #dbeafe 100%)",
+  primary: "#f97316", primaryHover: "#ea580c", border: "#fed7aa", bubbleBg: "#fff7ed",
+};
+
 interface LessonChatProps {
   courseId: string;
   lessonId: string;
@@ -12,6 +28,7 @@ interface LessonChatProps {
   lessonContent: string;
   hasExam: boolean;
   isHebrew?: boolean;
+  theme?: Theme;
   onBack: () => void;
 }
 
@@ -77,8 +94,10 @@ export default function LessonChat({
   lessonTitle,
   hasExam,
   isHebrew,
+  theme: themeProp,
   onBack,
 }: LessonChatProps): React.ReactElement {
+  const theme = themeProp ?? DEFAULT_THEME;
   const studentId = getCurrentUserId();
   const studentName =
     APP_USERS.find((u) => u.id === studentId)?.nameHe ?? studentId;
@@ -361,7 +380,7 @@ export default function LessonChat({
   return (
     <div
       dir="rtl"
-      className="student-theme student-chat"
+      className="student-chat"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -369,6 +388,8 @@ export default function LessonChat({
         maxWidth: 700,
         margin: "0 auto",
         padding: "16px 16px 0",
+        background: theme.gradient,
+        fontFamily: "'Nunito', 'Rubik', -apple-system, sans-serif",
       }}
     >
       {showConfetti && <Confetti />}
@@ -381,20 +402,20 @@ export default function LessonChat({
           marginBottom: 16,
           background: "#fff",
           padding: "12px 16px",
-          borderRadius: 16,
+          borderRadius: 18,
           boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
         }}
       >
         <button
           onClick={onBack}
           style={{
-            background: "#fff7ed",
-            border: "2px solid #fed7aa",
-            borderRadius: 10,
-            padding: "6px 14px",
-            fontSize: 13,
-            fontWeight: 600,
-            color: "#f97316",
+            background: theme.bubbleBg,
+            border: `2px solid ${theme.border}`,
+            borderRadius: 12,
+            padding: "8px 16px",
+            fontSize: 14,
+            fontWeight: 700,
+            color: theme.primary,
             cursor: "pointer",
           }}
         >
@@ -406,10 +427,10 @@ export default function LessonChat({
           style={{
             background: "#fef2f2",
             border: "2px solid #fecaca",
-            borderRadius: 10,
-            padding: "6px 14px",
-            fontSize: 13,
-            fontWeight: 600,
+            borderRadius: 12,
+            padding: "8px 16px",
+            fontSize: 14,
+            fontWeight: 700,
             color: "#ef4444",
             cursor: "pointer",
             opacity: loadingHistory ? 0.5 : 1,
@@ -417,7 +438,7 @@ export default function LessonChat({
         >
           להתחיל מחדש
         </button>
-        <h2 style={{ fontSize: 17, flex: 1, color: "#1c1917" }}>
+        <h2 style={{ fontSize: 18, flex: 1, color: "#1c1917", fontWeight: 800 }}>
           📖 {lessonTitle}
         </h2>
         {hasExam && (
@@ -425,12 +446,12 @@ export default function LessonChat({
             onClick={handleStartExam}
             disabled={loadingHistory}
             style={{
-              background: "linear-gradient(135deg, #f97316, #fb923c)",
+              background: `linear-gradient(135deg, ${theme.primary}, ${theme.primaryHover})`,
               border: "none",
-              borderRadius: 10,
-              padding: "8px 16px",
-              fontSize: 13,
-              fontWeight: 700,
+              borderRadius: 12,
+              padding: "10px 18px",
+              fontSize: 14,
+              fontWeight: 800,
               color: "#fff",
               cursor: "pointer",
               whiteSpace: "nowrap",
@@ -448,14 +469,14 @@ export default function LessonChat({
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
-          gap: 12,
+          gap: 14,
           paddingBottom: 16,
         }}
       >
         {loadingHistory && (
           <div style={{ textAlign: "center", padding: 40 }}>
-            <div style={{ fontSize: 32, marginBottom: 8 }}>📖</div>
-            <p style={{ color: "#78716c" }}>טוען צ׳אט...</p>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>📖</div>
+            <p style={{ color: "#78716c", fontSize: 16 }}>טוען צ׳אט...</p>
           </div>
         )}
 
@@ -479,15 +500,16 @@ export default function LessonChat({
             {msg.role === "assistant" && (
               <div
                 style={{
-                  width: 32,
-                  height: 32,
+                  width: 36,
+                  height: 36,
                   borderRadius: "50%",
-                  background: "linear-gradient(135deg, #fbbf24, #f97316)",
+                  background: `linear-gradient(135deg, #fbbf24, ${theme.primary})`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 16,
+                  fontSize: 18,
                   flexShrink: 0,
+                  boxShadow: `0 2px 6px ${theme.primary}30`,
                 }}
               >
                 👩‍🏫
@@ -495,24 +517,24 @@ export default function LessonChat({
             )}
             <div
               style={{
-                padding: "12px 16px",
+                padding: "14px 18px",
                 borderRadius: msg.role === "user"
-                  ? "16px 16px 16px 4px"
-                  : "16px 16px 4px 16px",
+                  ? "18px 18px 18px 4px"
+                  : "18px 18px 4px 18px",
                 background: msg.role === "user"
-                  ? "linear-gradient(135deg, #f97316, #fb923c)"
-                  : "#fff7ed",
+                  ? `linear-gradient(135deg, ${theme.primary}, ${theme.primaryHover})`
+                  : theme.bubbleBg,
                 color: msg.role === "user" ? "white" : "#1c1917",
-                border: msg.role === "assistant" ? "1px solid #fed7aa" : "none",
-                fontSize: 15,
-                lineHeight: 1.6,
+                border: msg.role === "assistant" ? `1px solid ${theme.border}` : "none",
+                fontSize: 16,
+                lineHeight: 1.7,
                 whiteSpace: "pre-wrap",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
               }}
             >
               {msg.content}
               {msg.images && msg.images.length > 0 && (
-                <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
                   {msg.images.map((imgId) => (
                     <img
                       key={imgId}
@@ -520,7 +542,7 @@ export default function LessonChat({
                       alt="illustration"
                       style={{
                         maxWidth: "100%",
-                        borderRadius: 12,
+                        borderRadius: 14,
                       }}
                     />
                   ))}
@@ -536,17 +558,17 @@ export default function LessonChat({
               alignSelf: "center",
               background: "#fef2f2",
               border: "2px solid #fecaca",
-              borderRadius: 16,
-              padding: "20px 24px",
+              borderRadius: 18,
+              padding: "24px 28px",
               maxWidth: "90%",
               textAlign: "center",
             }}
           >
-            <p style={{ fontSize: 24, marginBottom: 8 }}>😰</p>
-            <p style={{ fontSize: 16, fontWeight: 600, color: "#b91c1c", marginBottom: 8 }}>
+            <p style={{ fontSize: 28, marginBottom: 8 }}>😰</p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#b91c1c", marginBottom: 8 }}>
               אוי לא, משהו השתבש!
             </p>
-            <p style={{ fontSize: 14, color: "#b91c1c", marginBottom: 12 }}>
+            <p style={{ fontSize: 15, color: "#b91c1c", marginBottom: 12 }}>
               תדברו עם אבא המדהים שלכם
             </p>
             <p
@@ -595,9 +617,9 @@ export default function LessonChat({
       <div
         style={{
           display: "flex",
-          gap: 8,
-          padding: "12px 0 16px",
-          borderTop: "1px solid #fed7aa",
+          gap: 10,
+          padding: "14px 0 18px",
+          borderTop: `1px solid ${theme.border}`,
         }}
       >
         <input
@@ -608,10 +630,10 @@ export default function LessonChat({
           disabled={sending}
           style={{
             flex: 1,
-            padding: "12px 16px",
-            border: "2px solid #fed7aa",
-            borderRadius: 14,
-            fontSize: 15,
+            padding: "14px 18px",
+            border: `2px solid ${theme.border}`,
+            borderRadius: 16,
+            fontSize: 16,
             fontFamily: "inherit",
             background: "#fff",
           }}
@@ -622,14 +644,15 @@ export default function LessonChat({
           style={{
             background: sending || !input.trim()
               ? "#e5e7eb"
-              : "linear-gradient(135deg, #f97316, #fb923c)",
+              : `linear-gradient(135deg, ${theme.primary}, ${theme.primaryHover})`,
             border: "none",
-            borderRadius: 14,
-            padding: "12px 20px",
-            fontSize: 16,
-            fontWeight: 700,
+            borderRadius: 16,
+            padding: "14px 22px",
+            fontSize: 18,
+            fontWeight: 800,
             color: sending || !input.trim() ? "#9ca3af" : "#fff",
             cursor: sending || !input.trim() ? "default" : "pointer",
+            boxShadow: sending || !input.trim() ? "none" : `0 2px 8px ${theme.primary}40`,
           }}
         >
           🚀
