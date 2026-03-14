@@ -16,7 +16,7 @@
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
-    "@google/generative-ai": "^0.24.1",
+    "@google/genai": "^1.45.0",
     "@types/node": "^25.3.5",
     "@types/react": "^19.2.14",
     "@upstash/redis": "^1.36.3",

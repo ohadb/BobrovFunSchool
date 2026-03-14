@@ -374,6 +374,21 @@ export default function LessonChat({
             }}
           >
             {msg.content}
+            {msg.images && msg.images.length > 0 && (
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+                {msg.images.map((imgId) => (
+                  <img
+                    key={imgId}
+                    src={`/api/image/${imgId}`}
+                    alt="illustration"
+                    style={{
+                      maxWidth: "100%",
+                      borderRadius: 8,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         ))}
 

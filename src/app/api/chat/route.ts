@@ -4,6 +4,7 @@ import { getCourseById } from "@/lib/courseStore";
 import { saveExamResult } from "@/lib/examResultStore";
 import { getInterests } from "@/lib/interestsStore";
 import { chatCompletion } from "@/lib/llm";
+import { saveImage } from "@/lib/imageStore";
 import type { ChatRequestBody, ChatMessage } from "@/types/chat";
 
 export async function POST(
@@ -40,6 +41,8 @@ export async function POST(
 
   const isHebrew = course.language === "he";
   const interests = await getInterests(studentId);
+  const backend = course.llmBackend ?? "claude";
+  const canGenerateImages = backend === "gemini";
   const systemPrompt = examMode
     ? buildExamPrompt(
         course.name,
@@ -49,6 +52,7 @@ export async function POST(
         isHebrew,
         interests,
         lesson.exam?.preview,
+        canGenerateImages,
       )
     : buildSystemPrompt(
         course.name,
@@ -57,6 +61,7 @@ export async function POST(
         studentName,
         isHebrew,
         interests,
+        canGenerateImages,
       );
 
   const historyMessages = [
@@ -67,16 +72,24 @@ export async function POST(
     { role: "user" as const, content: message },
   ];
 
-  const backend = course.llmBackend ?? "claude";
+  const enableImages = canGenerateImages;
   const llmResult = await chatCompletion(
     backend,
     systemPrompt,
     historyMessages,
+    enableImages,
   );
+
+  const imageIds: string[] = [];
+  for (const img of llmResult.images) {
+    const id = await saveImage(img.base64, img.mimeType);
+    imageIds.push(id);
+  }
 
   const assistantMessage: ChatMessage = {
     role: "assistant",
     content: llmResult.text,
+    ...(imageIds.length > 0 ? { images: imageIds } : {}),
     timestamp: new Date().toISOString(),
   };
   await saveChatMessage(studentId, courseId, lessonId, assistantMessage);
@@ -104,6 +117,7 @@ function buildSystemPrompt(
   studentName: string,
   isHebrew: boolean,
   interests: string[],
+  canGenerateImages: boolean,
 ): string {
   const lang = isHebrew ? "Hebrew (עברית)" : "English";
   const interestsLine =
@@ -127,7 +141,7 @@ Instructions:
 - Keep responses concise (2-4 sentences usually).
 - If the student seems confused, try explaining differently.
 - Be funny when possible — use humor to make learning enjoyable.
-- Stay on topic — focus on this lesson's content.${interestsLine}`;
+- Stay on topic — focus on this lesson's content.${interestsLine}${canGenerateImages ? `\n- When explaining a concept that would benefit from a visual illustration (diagrams, shapes, charts, visual math problems, etc.), generate an image to help the student understand. Only generate images when a visual truly aids comprehension — not for every response.` : ""}`;
 }
 
 function buildExamPrompt(
@@ -138,6 +152,7 @@ function buildExamPrompt(
   isHebrew: boolean,
   interests: string[],
   examPreview?: string,
+  canGenerateImages?: boolean,
 ): string {
   const lang = isHebrew ? "Hebrew (עברית)" : "English";
   const interestsLine =
@@ -161,5 +176,5 @@ Instructions:
 - Be encouraging and supportive, even when the answer is wrong.
 - After all questions are done, give a short summary of how they did.
 - At the very end of the summary message, add the score in this exact format: [SCORE: X/Y] where X is correct answers and Y is total questions. This marker is required.
-- Keep responses concise and age-appropriate.${interestsLine}${examPreview ? `\n\nHere is an example of the kind of questions you should generate (use these as a reference for style and difficulty, but generate fresh different questions):\n${examPreview}` : ""}`;
+- Keep responses concise and age-appropriate.${interestsLine}${canGenerateImages ? `\n- When a question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student.` : ""}${examPreview ? `\n\nHere is an example of the kind of questions you should generate (use these as a reference for style and difficulty, but generate fresh different questions):\n${examPreview}` : ""}`;
 }
