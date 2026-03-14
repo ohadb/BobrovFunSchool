@@ -59,11 +59,20 @@ export default function CourseForm({
   const [loadingPreview, setLoadingPreview] = useState<Record<number, boolean>>(
     {},
   );
+  const [previewCollapsed, setPreviewCollapsed] = useState<Record<number, boolean>>(
+    () => {
+      const initial: Record<number, boolean> = {};
+      course?.lessons.forEach((l, i) => {
+        if (l.exam?.preview) initial[i] = true;
+      });
+      return initial;
+    },
+  );
 
   const addLesson = (): void => {
     setLessons([
       ...lessons,
-      { title: "", content: "", order: lessons.length + 1 },
+      { id: crypto.randomUUID(), title: "", content: "", order: lessons.length + 1 },
     ]);
   };
 
@@ -120,6 +129,7 @@ export default function CourseForm({
       });
       const data = (await res.json()) as { preview: string };
       setExamPreview((prev) => ({ ...prev, [index]: data.preview }));
+      setPreviewCollapsed((prev) => ({ ...prev, [index]: true }));
     } catch {
       setExamPreview((prev) => ({
         ...prev,
@@ -150,6 +160,7 @@ export default function CourseForm({
       });
       const data = (await res.json()) as { preview: string };
       setExamPreview((prev) => ({ ...prev, [index]: data.preview }));
+      setPreviewCollapsed((prev) => ({ ...prev, [index]: true }));
       setExamFeedback((prev) => ({ ...prev, [index]: "" }));
     } catch {
       // keep current preview
@@ -260,24 +271,12 @@ export default function CourseForm({
       </div>
 
       <div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 8,
-          }}
-        >
-          <label style={{ fontWeight: 500 }}>Lessons</label>
-          <button type="button" className="secondary" onClick={addLesson}>
-            + Add Lesson
-          </button>
-        </div>
+        <label style={{ fontWeight: 500, display: "block", marginBottom: 8 }}>Lessons</label>
 
         {lessons.length === 0 && (
           <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
-            No lessons yet. Add lessons after creating the course, or click
-            &quot;+ Add Lesson&quot; above.
+            No lessons yet. Click &quot;+ Add Lesson&quot; below to add
+            lessons.
           </p>
         )}
 
@@ -300,7 +299,7 @@ export default function CourseForm({
               }}
             >
               <span style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                Lesson {lesson.order}
+                Lesson {lesson.order}{lesson.id && <span style={{ fontSize: 11, marginInlineStart: 8, opacity: 0.6 }}>({lesson.id})</span>}
               </span>
               <button
                 type="button"
@@ -347,25 +346,49 @@ export default function CourseForm({
                     </p>
                   )}
                   {examPreview[index] && !loadingPreview[index] && (
-                    <div
-                      dir={language === "he" ? "rtl" : "ltr"}
-                      style={{
-                        marginTop: 8,
-                        padding: 12,
-                        background: "#f0f4ff",
-                        border: "1px solid #c7d2fe",
-                        borderRadius: 6,
-                        fontSize: 13,
-                        lineHeight: 1.6,
-                        whiteSpace: "pre-wrap",
-                        color: "var(--text)",
-                      }}
-                    >
-                      <strong style={{ fontSize: 12, color: "var(--primary)" }}>
-                        Exam Preview:
-                      </strong>
-                      <br />
-                      {examPreview[index]}
+                    <div style={{ marginTop: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPreviewCollapsed((prev) => ({
+                            ...prev,
+                            [index]: !prev[index],
+                          }))
+                        }
+                        style={{
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          cursor: "pointer",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "var(--primary)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                        }}
+                      >
+                        <span style={{ display: "inline-block", transform: previewCollapsed[index] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform 0.2s" }}>&#9654;</span>
+                        Exam Preview
+                      </button>
+                      {!previewCollapsed[index] && (
+                        <div
+                          dir={language === "he" ? "rtl" : "ltr"}
+                          style={{
+                            marginTop: 6,
+                            padding: 12,
+                            background: "#f0f4ff",
+                            border: "1px solid #c7d2fe",
+                            borderRadius: 6,
+                            fontSize: 13,
+                            lineHeight: 1.6,
+                            whiteSpace: "pre-wrap",
+                            color: "var(--text)",
+                          }}
+                        >
+                          {examPreview[index]}
+                        </div>
+                      )}
                     </div>
                   )}
                   {examPreview[index] && !loadingPreview[index] && (
@@ -418,6 +441,10 @@ export default function CourseForm({
             </div>
           </div>
         ))}
+
+        <button type="button" className="secondary" onClick={addLesson} style={{ marginTop: 8 }}>
+          + Add Lesson
+        </button>
       </div>
 
       <div style={{ display: "flex", gap: 8 }}>
