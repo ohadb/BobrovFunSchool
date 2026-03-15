@@ -638,25 +638,44 @@ export default function LessonChat({
             background: "#fff",
           }}
         />
-        <button
-          onClick={handleSend}
-          disabled={sending || !input.trim()}
-          style={{
-            background: sending || !input.trim()
-              ? "#e5e7eb"
-              : `linear-gradient(135deg, ${theme.primary}, ${theme.primaryHover})`,
-            border: "none",
-            borderRadius: 16,
-            padding: "14px 22px",
-            fontSize: 18,
-            fontWeight: 800,
-            color: sending || !input.trim() ? "#9ca3af" : "#fff",
-            cursor: sending || !input.trim() ? "default" : "pointer",
-            boxShadow: sending || !input.trim() ? "none" : `0 2px 8px ${theme.primary}40`,
-          }}
-        >
-          🚀
-        </button>
+        {sending ? (
+          <button
+            onClick={handleStop}
+            style={{
+              background: "linear-gradient(135deg, #ef4444, #dc2626)",
+              border: "none",
+              borderRadius: 16,
+              padding: "14px 22px",
+              fontSize: 18,
+              fontWeight: 800,
+              color: "#fff",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px #ef444440",
+            }}
+          >
+            ⏹️
+          </button>
+        ) : (
+          <button
+            onClick={handleSend}
+            disabled={!input.trim()}
+            style={{
+              background: !input.trim()
+                ? "#e5e7eb"
+                : `linear-gradient(135deg, ${theme.primary}, ${theme.primaryHover})`,
+              border: "none",
+              borderRadius: 16,
+              padding: "14px 22px",
+              fontSize: 18,
+              fontWeight: 800,
+              color: !input.trim() ? "#9ca3af" : "#fff",
+              cursor: !input.trim() ? "default" : "pointer",
+              boxShadow: !input.trim() ? "none" : `0 2px 8px ${theme.primary}40`,
+            }}
+          >
+            🚀
+          </button>
+        )}
       </div>
     </div>
   );
