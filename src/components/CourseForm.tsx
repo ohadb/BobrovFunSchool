@@ -104,6 +104,68 @@ export default function CourseForm({
     setLessons(updated);
   };
 
+  const consumeExamStream = async (
+    index: number,
+    fetchBody: Record<string, unknown>,
+  ): Promise<void> => {
+    setLoadingPreview((prev) => ({ ...prev, [index]: true }));
+    setExamPreview((prev) => ({ ...prev, [index]: "" }));
+    setPreviewImages((prev) => ({ ...prev, [index]: [] }));
+    setPreviewCollapsed((prev) => ({ ...prev, [index]: false }));
+    try {
+      const res = await fetch("/api/exam-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fetchBody),
+      });
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No stream");
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let done = false;
+      while (!done) {
+        const { value, done: streamDone } = await reader.read();
+        done = streamDone;
+        if (value) buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() ?? "";
+        for (const part of parts) {
+          const eventMatch = part.match(/^event:\s*(.+)$/m);
+          const dataMatch = part.match(/^data:\s*(.+)$/m);
+          if (!eventMatch || !dataMatch) continue;
+          const event = eventMatch[1];
+          if (event === "done") break;
+          if (event === "question") {
+            const payload = JSON.parse(dataMatch[1]) as {
+              index: number;
+              text: string;
+              images: string[];
+            };
+            setExamPreview((prev) => {
+              const current = prev[index] ?? "";
+              return {
+                ...prev,
+                [index]: current ? current + "\n" + payload.text : payload.text,
+              };
+            });
+            if (payload.images.length > 0) {
+              setPreviewImages((prev) => ({
+                ...prev,
+                [index]: [...(prev[index] ?? []), ...payload.images],
+              }));
+            }
+          }
+        }
+      }
+    } catch {
+      setExamPreview((prev) => ({
+        ...prev,
+        [index]: prev[index] || "Failed to generate preview.",
+      }));
+    }
+    setLoadingPreview((prev) => ({ ...prev, [index]: false }));
+  };
+
   const generateExamPreview = async (
     index: number,
     lesson: LessonInput,
@@ -115,60 +177,29 @@ export default function CourseForm({
       }));
       return;
     }
-    setLoadingPreview((prev) => ({ ...prev, [index]: true }));
-    try {
-      const res = await fetch("/api/exam-preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          courseName: name,
-          lessonTitle: lesson.title,
-          lessonContent: lesson.content,
-          language,
-          llmBackend,
-        }),
-      });
-      const data = (await res.json()) as { preview: string; images?: string[] };
-      setExamPreview((prev) => ({ ...prev, [index]: data.preview }));
-      setPreviewImages((prev) => ({ ...prev, [index]: data.images ?? [] }));
-      setPreviewCollapsed((prev) => ({ ...prev, [index]: false }));
-    } catch {
-      setExamPreview((prev) => ({
-        ...prev,
-        [index]: "Failed to generate preview.",
-      }));
-    }
-    setLoadingPreview((prev) => ({ ...prev, [index]: false }));
+    await consumeExamStream(index, {
+      courseName: name,
+      lessonTitle: lesson.title,
+      lessonContent: lesson.content,
+      language,
+      llmBackend,
+    });
   };
 
   const applyFeedback = async (index: number): Promise<void> => {
     const feedback = (examFeedback[index] ?? "").trim();
     if (!feedback || !examPreview[index]) return;
     const lesson = lessons[index];
-    setLoadingPreview((prev) => ({ ...prev, [index]: true }));
-    try {
-      const res = await fetch("/api/exam-preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          courseName: name,
-          lessonTitle: lesson.title,
-          lessonContent: lesson.content,
-          language,
-          llmBackend,
-          currentPreview: examPreview[index],
-          feedback,
-        }),
-      });
-      const data = (await res.json()) as { preview: string; images?: string[] };
-      setExamPreview((prev) => ({ ...prev, [index]: data.preview }));
-      setPreviewImages((prev) => ({ ...prev, [index]: data.images ?? [] }));
-      setPreviewCollapsed((prev) => ({ ...prev, [index]: false }));
-      setExamFeedback((prev) => ({ ...prev, [index]: "" }));
-    } catch {
-      // keep current preview
-    }
-    setLoadingPreview((prev) => ({ ...prev, [index]: false }));
+    setExamFeedback((prev) => ({ ...prev, [index]: "" }));
+    await consumeExamStream(index, {
+      courseName: name,
+      lessonTitle: lesson.title,
+      lessonContent: lesson.content,
+      language,
+      llmBackend,
+      currentPreview: examPreview[index],
+      feedback,
+    });
   };
 
   const updateExamDescription = (index: number, description: string): void => {
