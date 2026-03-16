@@ -16,6 +16,15 @@ const COURSE_COLORS = [
   { bg: "#ffedd5", border: "#fb923c", emoji: "🔥" },
 ];
 
+const GRAY_COURSE_COLORS = [
+  { bg: "#f3f4f6", border: "#9ca3af", emoji: "🌟" },
+  { bg: "#e5e7eb", border: "#6b7280", emoji: "🚀" },
+  { bg: "#f9fafb", border: "#9ca3af", emoji: "🎨" },
+  { bg: "#f3f4f6", border: "#6b7280", emoji: "🌿" },
+  { bg: "#e5e7eb", border: "#9ca3af", emoji: "✨" },
+  { bg: "#f9fafb", border: "#6b7280", emoji: "🔥" },
+];
+
 const LESSON_COLORS = [
   { bg: "#fef9c3", border: "#facc15" },
   { bg: "#cffafe", border: "#22d3ee" },
@@ -23,6 +32,15 @@ const LESSON_COLORS = [
   { bg: "#dcfce7", border: "#4ade80" },
   { bg: "#e0e7ff", border: "#818cf8" },
   { bg: "#fff1f2", border: "#fb7185" },
+];
+
+const GRAY_LESSON_COLORS = [
+  { bg: "#f3f4f6", border: "#9ca3af" },
+  { bg: "#e5e7eb", border: "#6b7280" },
+  { bg: "#f9fafb", border: "#9ca3af" },
+  { bg: "#f3f4f6", border: "#6b7280" },
+  { bg: "#e5e7eb", border: "#9ca3af" },
+  { bg: "#f9fafb", border: "#6b7280" },
 ];
 
 const THEMES = [
@@ -167,7 +185,8 @@ export default function StudentPortal(): React.ReactElement {
             .slice()
             .sort((a, b) => a.order - b.order)
             .map((lesson, i) => {
-              const color = LESSON_COLORS[i % LESSON_COLORS.length];
+              const lessonColors = themeId === "silver" ? GRAY_LESSON_COLORS : LESSON_COLORS;
+              const color = lessonColors[i % lessonColors.length];
               const lp = progress[lesson.id];
               const started = lp && lp.messageCount > 0;
               const hasScore = lp && lp.bestScore !== null;
@@ -359,7 +378,8 @@ export default function StudentPortal(): React.ReactElement {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {courses.map((course, i) => {
-          const color = COURSE_COLORS[i % COURSE_COLORS.length];
+          const courseColors = themeId === "silver" ? GRAY_COURSE_COLORS : COURSE_COLORS;
+          const color = courseColors[i % courseColors.length];
           return (
             <button
               key={course.id}
