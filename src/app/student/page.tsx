@@ -31,6 +31,7 @@ const THEMES = [
   { id: "forest", label: "💚", gradient: "linear-gradient(135deg, #d1fae5 0%, #fef9c3 50%, #dcfce7 100%)", primary: "#22c55e", primaryHover: "#16a34a", border: "#86efac", bubbleBg: "#f0fdf4" },
   { id: "galaxy", label: "💜", gradient: "linear-gradient(135deg, #ede9fe 0%, #fce7f3 50%, #dbeafe 100%)", primary: "#8b5cf6", primaryHover: "#7c3aed", border: "#c4b5fd", bubbleBg: "#f5f3ff" },
   { id: "sunset", label: "💖", gradient: "linear-gradient(135deg, #fce7f3 0%, #fef3c7 50%, #ffedd5 100%)", primary: "#ec4899", primaryHover: "#db2777", border: "#f9a8d4", bubbleBg: "#fdf2f8" },
+  { id: "silver", label: "🤍", gradient: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 50%, #d1d5db 100%)", primary: "#6b7280", primaryHover: "#4b5563", border: "#9ca3af", bubbleBg: "#f9fafb" },
 ];
 
 function getStoredTheme(): string {
