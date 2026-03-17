@@ -67,18 +67,28 @@ Requirements:
 - When the question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student.`;
 
   try {
+    const llmStart = Date.now();
     const result = await chatCompletion(
       backend,
       "",
       [{ role: "user", content: prompt }],
       enableImages,
     );
+    const llmMs = Date.now() - llmStart;
+    console.log(`[exam-preview] Q${questionNum} LLM took ${llmMs}ms (${backend}, images=${enableImages}, generatedImages=${result.images.length})`);
 
     const imageIds: string[] = [];
-    for (const img of result.images) {
-      const id = await saveImage(img.base64, img.mimeType);
-      imageIds.push(id);
+    if (result.images.length > 0) {
+      const imgStart = Date.now();
+      for (const img of result.images) {
+        const id = await saveImage(img.base64, img.mimeType);
+        imageIds.push(id);
+      }
+      console.log(`[exam-preview] Q${questionNum} saving ${imageIds.length} images took ${Date.now() - imgStart}ms`);
     }
+
+    const totalMs = Date.now() - llmStart;
+    console.log(`[exam-preview] Q${questionNum} total: ${totalMs}ms`);
 
     return NextResponse.json({
       index: questionNum - 1,
@@ -87,6 +97,7 @@ Requirements:
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    console.error(`[exam-preview] Q${questionNum} FAILED after ${Date.now()}ms: ${message}`);
     return NextResponse.json(
       { error: `Failed to generate question ${questionNum}: ${message}` },
       { status: 500 },
