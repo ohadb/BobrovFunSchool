@@ -46,25 +46,25 @@ export default function CourseForm({
     })) ?? [],
   );
   const [saving, setSaving] = useState(false);
-  const [examPreview, setExamPreview] = useState<Record<number, string>>(
+  const [examPreview, setExamPreview] = useState<Record<string, string>>(
     () => {
-      const initial: Record<number, string> = {};
-      course?.lessons.forEach((l, i) => {
-        if (l.exam?.preview) initial[i] = l.exam.preview;
+      const initial: Record<string, string> = {};
+      course?.lessons.forEach((l) => {
+        if (l.exam?.preview) initial[l.id] = l.exam.preview;
       });
       return initial;
     },
   );
-  const [examFeedback, setExamFeedback] = useState<Record<number, string>>({});
-  const [loadingPreview, setLoadingPreview] = useState<Record<number, boolean>>(
+  const [examFeedback, setExamFeedback] = useState<Record<string, string>>({});
+  const [loadingPreview, setLoadingPreview] = useState<Record<string, boolean>>(
     {},
   );
-  const [previewImages, setPreviewImages] = useState<Record<number, string[]>>({});
-  const [previewCollapsed, setPreviewCollapsed] = useState<Record<number, boolean>>(
+  const [previewImages, setPreviewImages] = useState<Record<string, string[]>>({});
+  const [previewCollapsed, setPreviewCollapsed] = useState<Record<string, boolean>>(
     () => {
-      const initial: Record<number, boolean> = {};
-      course?.lessons.forEach((l, i) => {
-        if (l.exam?.preview) initial[i] = true;
+      const initial: Record<string, boolean> = {};
+      course?.lessons.forEach((l) => {
+        if (l.exam?.preview) initial[l.id] = true;
       });
       return initial;
     },
@@ -89,29 +89,30 @@ export default function CourseForm({
 
   const toggleExam = (index: number): void => {
     const updated = [...lessons];
+    const lessonId = updated[index].id!;
     if (updated[index].exam) {
       const { exam: _, ...rest } = updated[index];
       updated[index] = rest as LessonInput;
       setExamPreview((prev) => {
         const next = { ...prev };
-        delete next[index];
+        delete next[lessonId];
         return next;
       });
     } else {
       updated[index] = { ...updated[index], exam: { description: "" } };
-      generateExamPreview(index, updated[index]);
+      generateExamPreview(updated[index]);
     }
     setLessons(updated);
   };
 
   const consumeExamStream = async (
-    index: number,
+    lessonId: string,
     fetchBody: Record<string, unknown>,
   ): Promise<void> => {
-    setLoadingPreview((prev) => ({ ...prev, [index]: true }));
-    setExamPreview((prev) => ({ ...prev, [index]: "" }));
-    setPreviewImages((prev) => ({ ...prev, [index]: [] }));
-    setPreviewCollapsed((prev) => ({ ...prev, [index]: false }));
+    setLoadingPreview((prev) => ({ ...prev, [lessonId]: true }));
+    setExamPreview((prev) => ({ ...prev, [lessonId]: "" }));
+    setPreviewImages((prev) => ({ ...prev, [lessonId]: [] }));
+    setPreviewCollapsed((prev) => ({ ...prev, [lessonId]: false }));
     try {
       const res = await fetch("/api/exam-preview", {
         method: "POST",
@@ -142,16 +143,16 @@ export default function CourseForm({
               images: string[];
             };
             setExamPreview((prev) => {
-              const current = prev[index] ?? "";
+              const current = prev[lessonId] ?? "";
               return {
                 ...prev,
-                [index]: current ? current + "\n" + payload.text : payload.text,
+                [lessonId]: current ? current + "\n" + payload.text : payload.text,
               };
             });
             if (payload.images.length > 0) {
               setPreviewImages((prev) => ({
                 ...prev,
-                [index]: [...(prev[index] ?? []), ...payload.images],
+                [lessonId]: [...(prev[lessonId] ?? []), ...payload.images],
               }));
             }
           }
@@ -160,24 +161,24 @@ export default function CourseForm({
     } catch {
       setExamPreview((prev) => ({
         ...prev,
-        [index]: prev[index] || "Failed to generate preview.",
+        [lessonId]: prev[lessonId] || "Failed to generate preview.",
       }));
     }
-    setLoadingPreview((prev) => ({ ...prev, [index]: false }));
+    setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
   };
 
   const generateExamPreview = async (
-    index: number,
     lesson: LessonInput,
   ): Promise<void> => {
+    const lessonId = lesson.id!;
     if (!lesson.title && !lesson.content) {
       setExamPreview((prev) => ({
         ...prev,
-        [index]: "Add lesson title and content first to see an exam preview.",
+        [lessonId]: "Add lesson title and content first to see an exam preview.",
       }));
       return;
     }
-    await consumeExamStream(index, {
+    await consumeExamStream(lessonId, {
       courseName: name,
       lessonTitle: lesson.title,
       lessonContent: lesson.content,
@@ -186,18 +187,18 @@ export default function CourseForm({
     });
   };
 
-  const applyFeedback = async (index: number): Promise<void> => {
-    const feedback = (examFeedback[index] ?? "").trim();
-    if (!feedback || !examPreview[index]) return;
-    const lesson = lessons[index];
-    setExamFeedback((prev) => ({ ...prev, [index]: "" }));
-    await consumeExamStream(index, {
+  const applyFeedback = async (lesson: LessonInput): Promise<void> => {
+    const lessonId = lesson.id!;
+    const feedback = (examFeedback[lessonId] ?? "").trim();
+    if (!feedback || !examPreview[lessonId]) return;
+    setExamFeedback((prev) => ({ ...prev, [lessonId]: "" }));
+    await consumeExamStream(lessonId, {
       courseName: name,
       lessonTitle: lesson.title,
       lessonContent: lesson.content,
       language,
       llmBackend,
-      currentPreview: examPreview[index],
+      currentPreview: examPreview[lessonId],
       feedback,
     });
   };
@@ -210,6 +211,14 @@ export default function CourseForm({
 
   const removeLesson = (index: number): void => {
     if (!window.confirm("Are you sure you want to delete this lesson?")) return;
+    const removedId = lessons[index].id;
+    if (removedId) {
+      setExamPreview((prev) => { const next = { ...prev }; delete next[removedId]; return next; });
+      setExamFeedback((prev) => { const next = { ...prev }; delete next[removedId]; return next; });
+      setLoadingPreview((prev) => { const next = { ...prev }; delete next[removedId]; return next; });
+      setPreviewImages((prev) => { const next = { ...prev }; delete next[removedId]; return next; });
+      setPreviewCollapsed((prev) => { const next = { ...prev }; delete next[removedId]; return next; });
+    }
     setLessons(
       lessons
         .filter((_, i) => i !== index)
@@ -220,10 +229,10 @@ export default function CourseForm({
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setSaving(true);
-    const lessonsWithPreview = lessons.map((l, i) => ({
+    const lessonsWithPreview = lessons.map((l) => ({
       ...l,
       exam: l.exam
-        ? { ...l.exam, preview: examPreview[i] ?? l.exam.preview ?? "" }
+        ? { ...l.exam, preview: examPreview[l.id!] ?? l.exam.preview ?? "" }
         : undefined,
     }));
     await onSave({ name, description, language, llmBackend, lessons: lessonsWithPreview });
@@ -316,7 +325,7 @@ export default function CourseForm({
 
         {lessons.map((lesson, index) => (
           <div
-            key={index}
+            key={lesson.id ?? index}
             style={{
               border: "1px solid var(--border)",
               borderRadius: "var(--radius)",
@@ -372,8 +381,8 @@ export default function CourseForm({
                     type="button"
                     className="secondary"
                     style={{ padding: "4px 8px", fontSize: 12 }}
-                    onClick={() => generateExamPreview(index, lesson)}
-                    disabled={loadingPreview[index]}
+                    onClick={() => generateExamPreview(lesson)}
+                    disabled={loadingPreview[lesson.id!]}
                   >
                     Refresh Exam
                   </button>
@@ -381,7 +390,7 @@ export default function CourseForm({
               </div>
               {lesson.exam && (
                 <>
-                  {loadingPreview[index] && (
+                  {loadingPreview[lesson.id!] && (
                     <p
                       style={{
                         fontSize: 12,
@@ -392,14 +401,14 @@ export default function CourseForm({
                       Generating exam preview...
                     </p>
                   )}
-                  {examPreview[index] && !loadingPreview[index] && (
+                  {examPreview[lesson.id!] && !loadingPreview[lesson.id!] && (
                     <div style={{ marginTop: 8 }}>
                       <button
                         type="button"
                         onClick={() =>
                           setPreviewCollapsed((prev) => ({
                             ...prev,
-                            [index]: !prev[index],
+                            [lesson.id!]: !prev[lesson.id!],
                           }))
                         }
                         style={{
@@ -415,10 +424,10 @@ export default function CourseForm({
                           gap: 4,
                         }}
                       >
-                        <span style={{ display: "inline-block", transform: previewCollapsed[index] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform 0.2s" }}>&#9654;</span>
+                        <span style={{ display: "inline-block", transform: previewCollapsed[lesson.id!] ? "rotate(0deg)" : "rotate(90deg)", transition: "transform 0.2s" }}>&#9654;</span>
                         Exam Preview
                       </button>
-                      {!previewCollapsed[index] && (
+                      {!previewCollapsed[lesson.id!] && (
                         <div
                           dir={language === "he" ? "rtl" : "ltr"}
                           style={{
@@ -433,10 +442,10 @@ export default function CourseForm({
                             color: "var(--text)",
                           }}
                         >
-                          {examPreview[index]}
-                          {(previewImages[index] ?? []).length > 0 && (
+                          {examPreview[lesson.id!]}
+                          {(previewImages[lesson.id!] ?? []).length > 0 && (
                             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                              {previewImages[index].map((imgId) => (
+                              {previewImages[lesson.id!].map((imgId) => (
                                 <img
                                   key={imgId}
                                   src={`/api/image/${imgId}`}
@@ -450,7 +459,7 @@ export default function CourseForm({
                       )}
                     </div>
                   )}
-                  {examPreview[index] && !loadingPreview[index] && (
+                  {examPreview[lesson.id!] && !loadingPreview[lesson.id!] && (
                     <div style={{ marginTop: 8 }}>
                       <label
                         style={{
@@ -465,11 +474,11 @@ export default function CourseForm({
                       </label>
                       <div style={{ display: "flex", gap: 8 }}>
                         <textarea
-                          value={examFeedback[index] ?? ""}
+                          value={examFeedback[lesson.id!] ?? ""}
                           onChange={(e) =>
                             setExamFeedback((prev) => ({
                               ...prev,
-                              [index]: e.target.value,
+                              [lesson.id!]: e.target.value,
                             }))
                           }
                           placeholder="e.g. make questions easier, add word problems, focus on division..."
@@ -479,10 +488,10 @@ export default function CourseForm({
                         <button
                           type="button"
                           className="primary"
-                          onClick={() => applyFeedback(index)}
+                          onClick={() => applyFeedback(lesson)}
                           disabled={
-                            !(examFeedback[index] ?? "").trim() ||
-                            loadingPreview[index]
+                            !(examFeedback[lesson.id!] ?? "").trim() ||
+                            loadingPreview[lesson.id!]
                           }
                           style={{
                             alignSelf: "flex-end",
