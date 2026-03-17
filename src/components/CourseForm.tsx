@@ -109,6 +109,7 @@ export default function CourseForm({
     lessonId: string,
     fetchBody: Record<string, unknown>,
   ): Promise<void> => {
+    console.log(`[Exam Preview] Starting for lesson ${lessonId}`, fetchBody);
     setLoadingPreview((prev) => ({ ...prev, [lessonId]: true }));
     setExamPreview((prev) => ({ ...prev, [lessonId]: "" }));
     setPreviewImages((prev) => ({ ...prev, [lessonId]: [] }));
@@ -119,6 +120,7 @@ export default function CourseForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(fetchBody),
       });
+      console.log(`[Exam Preview] Response status: ${res.status}`);
       if (!res.ok) {
         const errText = await res.text();
         throw new Error(`API ${res.status}: ${errText}`);
@@ -128,6 +130,7 @@ export default function CourseForm({
       const decoder = new TextDecoder();
       let buffer = "";
       let done = false;
+      let questionCount = 0;
       while (!done) {
         const { value, done: streamDone } = await reader.read();
         done = streamDone;
@@ -139,13 +142,16 @@ export default function CourseForm({
           const dataMatch = part.match(/^data:\s*(.+)$/m);
           if (!eventMatch || !dataMatch) continue;
           const event = eventMatch[1];
+          console.log(`[Exam Preview] Event: ${event}`);
           if (event === "done") break;
           if (event === "question") {
+            questionCount++;
             const payload = JSON.parse(dataMatch[1]) as {
               index: number;
               text: string;
               images: string[];
             };
+            console.log(`[Exam Preview] Question ${questionCount} received for ${lessonId}`);
             setExamPreview((prev) => {
               const current = prev[lessonId] ?? "";
               return {
@@ -161,6 +167,13 @@ export default function CourseForm({
             }
           }
         }
+      }
+      console.log(`[Exam Preview] Stream done. ${questionCount} questions received for ${lessonId}`);
+      if (questionCount === 0) {
+        setExamPreview((prev) => ({
+          ...prev,
+          [lessonId]: prev[lessonId] || "No questions were generated. Check the Vercel function logs for details.",
+        }));
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
