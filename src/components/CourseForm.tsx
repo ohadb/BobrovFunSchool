@@ -105,85 +105,52 @@ export default function CourseForm({
     setLessons(updated);
   };
 
-  const consumeExamStream = async (
+  const fetchOneQuestion = async (
     lessonId: string,
-    fetchBody: Record<string, unknown>,
+    baseBody: Record<string, unknown>,
+    questionNum: number,
   ): Promise<void> => {
-    console.log(`[Exam Preview] Starting for lesson ${lessonId}`, fetchBody);
-    setLoadingPreview((prev) => ({ ...prev, [lessonId]: true }));
-    setExamPreview((prev) => ({ ...prev, [lessonId]: "" }));
-    setPreviewImages((prev) => ({ ...prev, [lessonId]: [] }));
-    setPreviewCollapsed((prev) => ({ ...prev, [lessonId]: false }));
     try {
       const res = await fetch("/api/exam-preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(fetchBody),
+        body: JSON.stringify({ ...baseBody, questionNum }),
       });
-      console.log(`[Exam Preview] Response status: ${res.status}`);
       if (!res.ok) {
         const errText = await res.text();
         throw new Error(`API ${res.status}: ${errText}`);
       }
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No stream");
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let done = false;
-      let questionCount = 0;
-      while (!done) {
-        const { value, done: streamDone } = await reader.read();
-        done = streamDone;
-        if (value) buffer += decoder.decode(value, { stream: true });
-        const parts = buffer.split("\n\n");
-        buffer = parts.pop() ?? "";
-        for (const part of parts) {
-          const eventMatch = part.match(/^event:\s*(.+)$/m);
-          const dataMatch = part.match(/^data:\s*(.+)$/m);
-          if (!eventMatch || !dataMatch) continue;
-          const event = eventMatch[1];
-          console.log(`[Exam Preview] Event: ${event}`);
-          if (event === "done") break;
-          if (event === "question") {
-            questionCount++;
-            const payload = JSON.parse(dataMatch[1]) as {
-              index: number;
-              text: string;
-              images: string[];
-            };
-            console.log(`[Exam Preview] Question ${questionCount} received for ${lessonId}`);
-            setExamPreview((prev) => {
-              const current = prev[lessonId] ?? "";
-              return {
-                ...prev,
-                [lessonId]: current ? current + "\n" + payload.text : payload.text,
-              };
-            });
-            if (payload.images.length > 0) {
-              setPreviewImages((prev) => ({
-                ...prev,
-                [lessonId]: [...(prev[lessonId] ?? []), ...payload.images],
-              }));
-            }
-          }
-        }
-      }
-      console.log(`[Exam Preview] Stream done. ${questionCount} questions received for ${lessonId}`);
-      if (questionCount === 0) {
-        setExamPreview((prev) => ({
+      const payload = (await res.json()) as {
+        index: number;
+        text: string;
+        images: string[];
+      };
+      setExamPreview((prev) => {
+        const current = prev[lessonId] ?? "";
+        return {
           ...prev,
-          [lessonId]: prev[lessonId] || "No questions were generated. Check the Vercel function logs for details.",
+          [lessonId]: current ? current + "\n" + payload.text : payload.text,
+        };
+      });
+      if (payload.images.length > 0) {
+        setPreviewImages((prev) => ({
+          ...prev,
+          [lessonId]: [...(prev[lessonId] ?? []), ...payload.images],
         }));
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error(`[Exam Preview] Failed for lesson ${lessonId}:`, err);
-      setExamPreview((prev) => ({
-        ...prev,
-        [lessonId]: prev[lessonId] || `Failed to generate preview: ${message}`,
-      }));
+      console.error(`[Exam Preview] Q${questionNum} failed for ${lessonId}:`, err);
+      setExamPreview((prev) => {
+        const current = prev[lessonId] ?? "";
+        return {
+          ...prev,
+          [lessonId]: current
+            ? current + `\n${questionNum}. (Failed: ${message})`
+            : `${questionNum}. (Failed: ${message})`,
+        };
+      });
     }
-    setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
   };
 
   const generateExamPreview = async (
@@ -197,13 +164,22 @@ export default function CourseForm({
       }));
       return;
     }
-    await consumeExamStream(lessonId, {
+    setLoadingPreview((prev) => ({ ...prev, [lessonId]: true }));
+    setExamPreview((prev) => ({ ...prev, [lessonId]: "" }));
+    setPreviewImages((prev) => ({ ...prev, [lessonId]: [] }));
+    setPreviewCollapsed((prev) => ({ ...prev, [lessonId]: false }));
+
+    const baseBody = {
       courseName: name,
       lessonTitle: lesson.title,
       lessonContent: lesson.content,
       language,
       llmBackend,
-    });
+    };
+    await Promise.all(
+      [1, 2, 3, 4, 5].map((q) => fetchOneQuestion(lessonId, baseBody, q)),
+    );
+    setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
   };
 
   const applyFeedback = async (lesson: LessonInput): Promise<void> => {
@@ -211,15 +187,39 @@ export default function CourseForm({
     const feedback = (examFeedback[lessonId] ?? "").trim();
     if (!feedback || !examPreview[lessonId]) return;
     setExamFeedback((prev) => ({ ...prev, [lessonId]: "" }));
-    await consumeExamStream(lessonId, {
+    setLoadingPreview((prev) => ({ ...prev, [lessonId]: true }));
+    setExamPreview((prev) => ({ ...prev, [lessonId]: "" }));
+    setPreviewImages((prev) => ({ ...prev, [lessonId]: [] }));
+    setPreviewCollapsed((prev) => ({ ...prev, [lessonId]: false }));
+
+    // Parse existing questions for per-question feedback
+    const existingQuestions: string[] = [];
+    const lines = examPreview[lessonId].split("\n");
+    let current = "";
+    for (const line of lines) {
+      if (/^\d+[\.\)]\s/.test(line)) {
+        if (current) existingQuestions.push(current.trim());
+        current = line;
+      } else {
+        current += "\n" + line;
+      }
+    }
+    if (current) existingQuestions.push(current.trim());
+
+    const baseBody = {
       courseName: name,
       lessonTitle: lesson.title,
       lessonContent: lesson.content,
       language,
       llmBackend,
-      currentPreview: examPreview[lessonId],
       feedback,
-    });
+    };
+    await Promise.all(
+      [1, 2, 3, 4, 5].map((q) =>
+        fetchOneQuestion(lessonId, { ...baseBody, currentQuestion: existingQuestions[q - 1] ?? "" }, q),
+      ),
+    );
+    setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
   };
 
   const updateExamDescription = (index: number, description: string): void => {
