@@ -119,6 +119,10 @@ export default function CourseForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(fetchBody),
       });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`API ${res.status}: ${errText}`);
+      }
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No stream");
       const decoder = new TextDecoder();
@@ -158,10 +162,12 @@ export default function CourseForm({
           }
         }
       }
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[Exam Preview] Failed for lesson ${lessonId}:`, err);
       setExamPreview((prev) => ({
         ...prev,
-        [lessonId]: prev[lessonId] || "Failed to generate preview.",
+        [lessonId]: prev[lessonId] || `Failed to generate preview: ${message}`,
       }));
     }
     setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
