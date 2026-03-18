@@ -106,10 +106,9 @@ export default function CourseForm({
   };
 
   const fetchOneQuestion = async (
-    lessonId: string,
     baseBody: Record<string, unknown>,
     questionNum: number,
-  ): Promise<void> => {
+  ): Promise<{ questionNum: number; text: string; images: string[] }> => {
     try {
       const res = await fetch("/api/exam-preview", {
         method: "POST",
@@ -125,31 +124,11 @@ export default function CourseForm({
         text: string;
         images: string[];
       };
-      setExamPreview((prev) => {
-        const current = prev[lessonId] ?? "";
-        return {
-          ...prev,
-          [lessonId]: current ? current + "\n" + payload.text : payload.text,
-        };
-      });
-      if (payload.images.length > 0) {
-        setPreviewImages((prev) => ({
-          ...prev,
-          [lessonId]: [...(prev[lessonId] ?? []), ...payload.images],
-        }));
-      }
+      return { questionNum, text: payload.text, images: payload.images };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error(`[Exam Preview] Q${questionNum} failed for ${lessonId}:`, err);
-      setExamPreview((prev) => {
-        const current = prev[lessonId] ?? "";
-        return {
-          ...prev,
-          [lessonId]: current
-            ? current + `\n${questionNum}. (Failed: ${message})`
-            : `${questionNum}. (Failed: ${message})`,
-        };
-      });
+      console.error(`[Exam Preview] Q${questionNum} failed:`, err);
+      return { questionNum, text: `${questionNum}. (Failed: ${message})`, images: [] };
     }
   };
 
@@ -177,12 +156,21 @@ export default function CourseForm({
       llmBackend,
     };
     const delay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
-    await Promise.all(
+    const results = await Promise.all(
       [1, 2, 3, 4, 5].map(async (q, i) => {
         if (i > 0) await delay(i * 200);
-        return fetchOneQuestion(lessonId, baseBody, q);
+        return fetchOneQuestion(baseBody, q);
       }),
     );
+    results.sort((a, b) => a.questionNum - b.questionNum);
+    setExamPreview((prev) => ({
+      ...prev,
+      [lessonId]: results.map((r) => r.text).join("\n"),
+    }));
+    const allImages = results.flatMap((r) => r.images);
+    if (allImages.length > 0) {
+      setPreviewImages((prev) => ({ ...prev, [lessonId]: allImages }));
+    }
     setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
   };
 
@@ -219,12 +207,21 @@ export default function CourseForm({
       feedback,
     };
     const delay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
-    await Promise.all(
+    const results = await Promise.all(
       [1, 2, 3, 4, 5].map(async (q, i) => {
         if (i > 0) await delay(i * 200);
-        return fetchOneQuestion(lessonId, { ...baseBody, currentQuestion: existingQuestions[q - 1] ?? "" }, q);
+        return fetchOneQuestion({ ...baseBody, currentQuestion: existingQuestions[q - 1] ?? "" }, q);
       }),
     );
+    results.sort((a, b) => a.questionNum - b.questionNum);
+    setExamPreview((prev) => ({
+      ...prev,
+      [lessonId]: results.map((r) => r.text).join("\n"),
+    }));
+    const allImages = results.flatMap((r) => r.images);
+    if (allImages.length > 0) {
+      setPreviewImages((prev) => ({ ...prev, [lessonId]: allImages }));
+    }
     setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
   };
 
