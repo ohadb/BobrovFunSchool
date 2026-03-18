@@ -65,6 +65,9 @@ async function geminiCompletion(
     config: {
       systemInstruction: systemPrompt,
       responseModalities: ["TEXT", "IMAGE"],
+      imageConfig: {
+        imageSize: "1K",
+      },
     },
   });
 
