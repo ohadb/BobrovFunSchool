@@ -73,19 +73,33 @@ export async function POST(
   ];
 
   const enableImages = canGenerateImages;
+  const mode = examMode ? "exam" : "lesson";
+  console.log(`[chat] ${mode} start: backend=${backend} lesson="${lesson.title}" historyLen=${historyMessages.length}`);
+
+  const llmStart = Date.now();
   const llmResult = await chatCompletion(
     backend,
     systemPrompt,
     historyMessages,
     enableImages,
   );
+  const llmMs = Date.now() - llmStart;
+  console.log(`[chat] ${mode} LLM took ${llmMs}ms (${backend}, images=${enableImages}, generatedImages=${llmResult.images.length})`);
 
   const imageIds: string[] = [];
-  console.log(`[chat] backend=${backend} images=${llmResult.images.length} debug=${llmResult.debug}`);
-  for (const img of llmResult.images) {
-    const id = await saveImage(img.base64, img.mimeType);
-    imageIds.push(id);
+  if (llmResult.images.length > 0) {
+    const imgStart = Date.now();
+    for (const img of llmResult.images) {
+      const sizeKB = Math.round((img.base64.length * 3) / 4 / 1024);
+      console.log(`[chat] ${mode} image: ${img.mimeType}, ~${sizeKB}KB`);
+      const id = await saveImage(img.base64, img.mimeType);
+      imageIds.push(id);
+    }
+    console.log(`[chat] ${mode} saving ${imageIds.length} images took ${Date.now() - imgStart}ms`);
   }
+
+  const totalMs = Date.now() - llmStart;
+  console.log(`[chat] ${mode} total: ${totalMs}ms debug=${llmResult.debug}`);
 
   const cleanText = stripMarkdown(llmResult.text);
 
