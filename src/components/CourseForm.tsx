@@ -59,7 +59,7 @@ export default function CourseForm({
   const [loadingPreview, setLoadingPreview] = useState<Record<string, boolean>>(
     {},
   );
-  const [previewImages, setPreviewImages] = useState<Record<string, string[]>>({});
+  const [previewImages, setPreviewImages] = useState<Record<string, string[][]>>({});
   const [previewCollapsed, setPreviewCollapsed] = useState<Record<string, boolean>>(
     () => {
       const initial: Record<string, boolean> = {};
@@ -167,10 +167,10 @@ export default function CourseForm({
       ...prev,
       [lessonId]: results.map((r) => r.text).join("\n"),
     }));
-    const allImages = results.flatMap((r) => r.images);
-    if (allImages.length > 0) {
-      setPreviewImages((prev) => ({ ...prev, [lessonId]: allImages }));
-    }
+    setPreviewImages((prev) => ({
+      ...prev,
+      [lessonId]: results.map((r) => r.images),
+    }));
     setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
   };
 
@@ -218,10 +218,10 @@ export default function CourseForm({
       ...prev,
       [lessonId]: results.map((r) => r.text).join("\n"),
     }));
-    const allImages = results.flatMap((r) => r.images);
-    if (allImages.length > 0) {
-      setPreviewImages((prev) => ({ ...prev, [lessonId]: allImages }));
-    }
+    setPreviewImages((prev) => ({
+      ...prev,
+      [lessonId]: results.map((r) => r.images),
+    }));
     setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
   };
 
@@ -464,19 +464,26 @@ export default function CourseForm({
                             color: "var(--text)",
                           }}
                         >
-                          {examPreview[lesson.id!]}
-                          {(previewImages[lesson.id!] ?? []).length > 0 && (
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-                              {previewImages[lesson.id!].map((imgId) => (
-                                <img
-                                  key={imgId}
-                                  src={`/api/image/${imgId}`}
-                                  alt="Exam preview illustration"
-                                  style={{ maxWidth: 200, borderRadius: 6, border: "1px solid #c7d2fe" }}
-                                />
-                              ))}
-                            </div>
-                          )}
+                          {examPreview[lesson.id!].split("\n").map((line, qIdx) => {
+                            const qImages = (previewImages[lesson.id!] ?? [])[qIdx] ?? [];
+                            return (
+                              <div key={qIdx} style={{ marginBottom: qImages.length > 0 ? 8 : 0 }}>
+                                {line}
+                                {qImages.length > 0 && (
+                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+                                    {qImages.map((imgId) => (
+                                      <img
+                                        key={imgId}
+                                        src={`/api/image/${imgId}`}
+                                        alt="Exam preview illustration"
+                                        style={{ maxWidth: 200, borderRadius: 6, border: "1px solid #c7d2fe" }}
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
