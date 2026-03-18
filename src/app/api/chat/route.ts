@@ -77,19 +77,39 @@ export async function POST(
   console.log(`[chat] ${mode} start: backend=${backend} lesson="${lesson.title}" historyLen=${historyMessages.length}`);
 
   const llmStart = Date.now();
-  const llmResult = await chatCompletion(
-    backend,
-    systemPrompt,
-    historyMessages,
-    enableImages,
-  );
+  let llmResult;
+  const maxRetries = 2;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      llmResult = await chatCompletion(
+        backend,
+        systemPrompt,
+        historyMessages,
+        enableImages,
+      );
+      break;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const is503 = msg.includes("503") || msg.includes("UNAVAILABLE") || msg.includes("high demand");
+      console.error(`[chat] ${mode} attempt ${attempt}/${maxRetries} failed: ${msg}`);
+      if (!is503 || attempt === maxRetries) {
+        return NextResponse.json(
+          { error: `LLM failed: ${msg}` },
+          { status: 502 },
+        );
+      }
+      console.log(`[chat] ${mode} retrying in 2s...`);
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
   const llmMs = Date.now() - llmStart;
-  console.log(`[chat] ${mode} LLM took ${llmMs}ms (${backend}, images=${enableImages}, generatedImages=${llmResult.images.length})`);
+  console.log(`[chat] ${mode} LLM took ${llmMs}ms (${backend}, images=${enableImages}, generatedImages=${llmResult!.images.length})`);
 
+  const result = llmResult!;
   const imageIds: string[] = [];
-  if (llmResult.images.length > 0) {
+  if (result.images.length > 0) {
     const imgStart = Date.now();
-    for (const img of llmResult.images) {
+    for (const img of result.images) {
       const sizeKB = Math.round((img.base64.length * 3) / 4 / 1024);
       console.log(`[chat] ${mode} image: ${img.mimeType}, ~${sizeKB}KB`);
       const id = await saveImage(img.base64, img.mimeType);
@@ -99,9 +119,9 @@ export async function POST(
   }
 
   const totalMs = Date.now() - llmStart;
-  console.log(`[chat] ${mode} total: ${totalMs}ms debug=${llmResult.debug}`);
+  console.log(`[chat] ${mode} total: ${totalMs}ms debug=${result.debug}`);
 
-  const cleanText = stripMarkdown(llmResult.text);
+  const cleanText = stripMarkdown(result.text);
 
   const assistantMessage: ChatMessage = {
     role: "assistant",
@@ -124,7 +144,7 @@ export async function POST(
     }
   }
 
-  return NextResponse.json({ ...assistantMessage, llmDebug: llmResult.debug });
+  return NextResponse.json({ ...assistantMessage, llmDebug: result.debug });
 }
 
 function buildSystemPrompt(
