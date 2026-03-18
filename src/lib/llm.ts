@@ -22,10 +22,21 @@ export async function chatCompletion(
   messages: { role: "user" | "assistant"; content: string }[],
   enableImages?: boolean,
 ): Promise<LlmResult> {
-  if (backend === "gemini") {
-    return geminiCompletion(systemPrompt, messages, enableImages);
+  const model = backend === "gemini" ? "gemini-3.1-flash-image-preview" : "claude-sonnet-4-20250514";
+  console.log(`[${backend}] REQUEST model=${model} systemPrompt=${systemPrompt.length}chars`);
+  const start = Date.now();
+  try {
+    const result = backend === "gemini"
+      ? await geminiCompletion(systemPrompt, messages, enableImages)
+      : await claudeCompletion(systemPrompt, messages);
+    const elapsed = Date.now() - start;
+    console.log(`[${backend}] RESPONSE ${elapsed}ms text=${result.text.length}chars images=${result.images.length}`);
+    return result;
+  } catch (err) {
+    const elapsed = Date.now() - start;
+    console.error(`[${backend}] ERROR ${elapsed}ms`, err);
+    throw err;
   }
-  return claudeCompletion(systemPrompt, messages);
 }
 
 async function claudeCompletion(
