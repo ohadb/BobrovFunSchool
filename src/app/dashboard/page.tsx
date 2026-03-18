@@ -82,17 +82,20 @@ export default function Dashboard(): React.ReactElement {
         style={{
           position: "fixed",
           bottom: 8,
-          right: 8,
-          background: "#f00",
+          left: 8,
+          background: "rgba(0,0,0,0.6)",
           color: "#fff",
-          fontSize: 11,
+          fontSize: 10,
           padding: "2px 6px",
           borderRadius: 4,
           zIndex: 9999,
           fontFamily: "monospace",
+          opacity: 0.7,
         }}
       >
-        build #5
+        {process.env.NEXT_PUBLIC_BUILD_TIME
+          ? new Date(process.env.NEXT_PUBLIC_BUILD_TIME).toLocaleString()
+          : "dev"}
       </div>
       <h1 style={{ fontSize: 24, marginBottom: 16 }}>Parent Dashboard</h1>
 
