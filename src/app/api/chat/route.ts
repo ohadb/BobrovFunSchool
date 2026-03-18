@@ -64,13 +64,25 @@ export async function POST(
         canGenerateImages,
       );
 
-  const historyMessages = [
+  const allMessages = [
     ...session.messages.map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     })),
     { role: "user" as const, content: message },
   ];
+
+  let historyMessages: { role: "user" | "assistant"; content: string }[];
+  if (examMode && allMessages.length > 1) {
+    // Condense prior Q&A into a summary to keep the request small and fast.
+    const prior = allMessages.slice(0, -1);
+    const summary = prior.map((m) => `${m.role === "user" ? "Student" : "Teacher"}: ${m.content}`).join("\n");
+    historyMessages = [
+      { role: "user", content: `Conversation so far:\n${summary}\n\nStudent's latest message: ${message}` },
+    ];
+  } else {
+    historyMessages = allMessages;
+  }
 
   const enableImages = canGenerateImages;
   const mode = examMode ? "exam" : "lesson";
