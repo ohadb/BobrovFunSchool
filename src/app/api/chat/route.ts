@@ -181,7 +181,7 @@ Instructions:
 - If the student seems confused, try explaining differently.
 - Be funny when possible — use humor to make learning enjoyable.
 - Stay on topic — focus on this lesson's content.
-- NEVER link to external images or URLs. Do not use markdown image syntax or provide links to imgur or any other site.${interestsLine}${canGenerateImages ? `\n- When explaining a concept that would benefit from a visual illustration (diagrams, shapes, charts, visual math problems, etc.), generate an image to help the student understand. Only generate images when a visual truly aids comprehension — not for every response.` : ""}`;
+- NEVER link to external images or URLs. Do not use markdown image syntax or provide links to imgur or any other site.${interestsLine}${canGenerateImages ? `\n- When explaining a concept that would benefit from a visual illustration (diagrams, shapes, charts, visual math problems, etc.), generate an image to help the student understand. Only generate images when a visual truly aids comprehension — not for every response. Image style: minimalist 2D icon, clean background, low-fidelity sketch style.` : ""}`;
 }
 
 function buildExamPrompt(
@@ -218,7 +218,7 @@ Instructions:
 - Address the student by their name (${studentName}) and as a women, and always add a compliment adjective before their name (e.g. "החכמה", "המדהימה", "היפה", "המוכשרת", "הנפלאה").
 - Be encouraging and supportive, even when the answer is wrong.
 - Keep responses concise and age-appropriate.
-- NEVER link to external images or URLs. Do not use markdown image syntax or provide links to imgur or any other site.${interestsLine}${canGenerateImages ? `\n- When a question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student.` : ""}${examPreview ? `\n\nHere is an example of the kind of questions you should generate (use these as a reference for style and difficulty, but generate fresh different questions):\n${examPreview}` : ""}`;
+- NEVER link to external images or URLs. Do not use markdown image syntax or provide links to imgur or any other site.${interestsLine}${canGenerateImages ? `\n- When a question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student. Image style: minimalist 2D icon, clean background, low-fidelity sketch style.` : ""}${examPreview ? `\n\nHere is an example of the kind of questions you should generate (use these as a reference for style and difficulty, but generate fresh different questions):\n${examPreview}` : ""}`;
 }
 
 function stripMarkdown(text: string): string {

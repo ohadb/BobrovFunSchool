@@ -51,7 +51,7 @@ Requirements:
 - The question must have a numeric answer.
 - Write it as "${questionNum}. <question text>"
 - Keep it age-appropriate and concise.
-- When the question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student.`
+- When the question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student. Image style: minimalist 2D icon, clean background, low-fidelity sketch style.`
     : `Generate ONLY question #${questionNum} (out of 5) for a kids lesson exam.
 
 Course: "${body.courseName}"
@@ -64,7 +64,7 @@ Requirements:
 - Write it as "${questionNum}. <question text>"
 - Keep it age-appropriate and concise.
 - Make sure this question is unique and different from other questions in the exam.
-- When the question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student.`;
+- When the question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student. Image style: minimalist 2D icon, clean background, low-fidelity sketch style.`;
 
   try {
     const llmStart = Date.now();
