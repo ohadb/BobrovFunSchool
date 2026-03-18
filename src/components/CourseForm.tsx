@@ -176,8 +176,12 @@ export default function CourseForm({
       language,
       llmBackend,
     };
+    const delay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
     await Promise.all(
-      [1, 2, 3, 4, 5].map((q) => fetchOneQuestion(lessonId, baseBody, q)),
+      [1, 2, 3, 4, 5].map(async (q, i) => {
+        if (i > 0) await delay(i * 200);
+        return fetchOneQuestion(lessonId, baseBody, q);
+      }),
     );
     setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
   };
@@ -214,10 +218,12 @@ export default function CourseForm({
       llmBackend,
       feedback,
     };
+    const delay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
     await Promise.all(
-      [1, 2, 3, 4, 5].map((q) =>
-        fetchOneQuestion(lessonId, { ...baseBody, currentQuestion: existingQuestions[q - 1] ?? "" }, q),
-      ),
+      [1, 2, 3, 4, 5].map(async (q, i) => {
+        if (i > 0) await delay(i * 200);
+        return fetchOneQuestion(lessonId, { ...baseBody, currentQuestion: existingQuestions[q - 1] ?? "" }, q);
+      }),
     );
     setLoadingPreview((prev) => ({ ...prev, [lessonId]: false }));
   };
