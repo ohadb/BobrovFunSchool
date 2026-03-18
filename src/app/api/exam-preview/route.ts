@@ -32,46 +32,37 @@ export async function POST(
 
   const hasFeedback = body.currentQuestion && body.feedback;
 
-  const prompt = hasFeedback
-    ? `You are revising an exam question for a kids lesson.
+  const systemPrompt = `You are creating exam questions for a kids lesson.
 
 Course: "${body.courseName}"
 Lesson: "${body.lessonTitle}"
 Content: ${body.lessonContent}
 
-The original question #${questionNum} was:
+Requirements:
+- Write in ${lang}.
+- The question must have a numeric answer.
+- Keep it age-appropriate and concise.
+- When the question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student. Image style: minimalist 2D icon, clean background, low-fidelity sketch style.`;
+
+  const userMessage = hasFeedback
+    ? `Revise question #${questionNum}. The original was:
 ${body.currentQuestion}
 
-The parent gave this feedback on the full set: "${body.feedback}"
+Parent feedback: "${body.feedback}"
 
 Apply the feedback and generate ONLY the revised question #${questionNum}.
-
-Requirements:
-- Write in ${lang}.
-- The question must have a numeric answer.
-- Write it as "${questionNum}. <question text>"
-- Keep it age-appropriate and concise.
-- When the question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student. Image style: minimalist 2D icon, clean background, low-fidelity sketch style.`
-    : `Generate ONLY question #${questionNum} (out of 5) for a kids lesson exam.
-
-Course: "${body.courseName}"
-Lesson: "${body.lessonTitle}"
-Content: ${body.lessonContent}
-
-Requirements:
-- Write in ${lang}.
-- The question must have a numeric answer.
-- Write it as "${questionNum}. <question text>"
-- Keep it age-appropriate and concise.
-- Make sure this question is unique and different from other questions in the exam.
-- When the question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student. Image style: minimalist 2D icon, clean background, low-fidelity sketch style.`;
+Write it as "${questionNum}. <question text>"
+When the question would benefit from a visual illustration, generate an image.`
+    : `Generate ONLY question #${questionNum} (out of 5).
+Write it as "${questionNum}. <question text>"
+When the question would benefit from a visual illustration, generate an image.`;
 
   try {
     const llmStart = Date.now();
     const result = await chatCompletion(
       backend,
-      "",
-      [{ role: "user", content: prompt }],
+      systemPrompt,
+      [{ role: "user", content: userMessage }],
       enableImages,
     );
     const llmMs = Date.now() - llmStart;
