@@ -67,6 +67,7 @@ async function geminiCompletion(
       responseModalities: ["TEXT", "IMAGE"],
       imageConfig: {
         imageSize: "1K",
+        numberOfImages: 1,
       },
     },
   });
