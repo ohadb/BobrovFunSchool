@@ -81,6 +81,8 @@ Requirements:
     if (result.images.length > 0) {
       const imgStart = Date.now();
       for (const img of result.images) {
+        const sizeKB = Math.round((img.base64.length * 3) / 4 / 1024);
+        console.log(`[exam-preview] Q${questionNum} image: ${img.mimeType}, ~${sizeKB}KB base64`);
         const id = await saveImage(img.base64, img.mimeType);
         imageIds.push(id);
       }

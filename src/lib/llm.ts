@@ -59,6 +59,9 @@ async function geminiCompletion(
     parts: [{ text: m.content }],
   }));
 
+  console.log(`[gemini] REQUEST model=${modelName} systemPrompt=${systemPrompt.length}chars`);
+  console.log(`[gemini] USER MESSAGE:\n${messages.map((m) => m.content).join("\n---\n")}`);
+
   const response = await genAI.models.generateContent({
     model: modelName,
     contents,
