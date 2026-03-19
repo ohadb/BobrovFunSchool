@@ -107,3 +107,46 @@ async function geminiCompletion(
     debug: `Google GenAI → ${modelName}${images.length > 0 ? ` (${images.length} img)` : ""}`,
   };
 }
+
+export async function geminiExamCompletion(
+  systemPrompt: string,
+  userMessage: string,
+): Promise<LlmResult> {
+  const modelName = "gemini-2.0-flash";
+  console.log(`[gemini-exam] REQUEST model=${modelName} systemPrompt=${systemPrompt.length}chars`);
+  const start = Date.now();
+
+  const response = await genAI.models.generateContent({
+    model: modelName,
+    contents: [{ role: "user", parts: [{ text: userMessage }] }],
+    config: {
+      systemInstruction: systemPrompt,
+      responseModalities: ["TEXT", "IMAGE"],
+    },
+  });
+
+  let text = "";
+  const images: LlmImage[] = [];
+
+  if (response.candidates?.[0]?.content?.parts) {
+    for (const part of response.candidates[0].content.parts) {
+      if (part.text) {
+        text += part.text;
+      } else if (part.inlineData) {
+        images.push({
+          base64: part.inlineData.data ?? "",
+          mimeType: part.inlineData.mimeType ?? "image/png",
+        });
+      }
+    }
+  }
+
+  const elapsed = Date.now() - start;
+  console.log(`[gemini-exam] RESPONSE ${elapsed}ms text=${text.length}chars images=${images.length}`);
+
+  return {
+    text,
+    images,
+    debug: `Google GenAI → ${modelName}${images.length > 0 ? ` (${images.length} img)` : ""}`,
+  };
+}

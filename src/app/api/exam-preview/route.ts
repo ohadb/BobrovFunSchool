@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { chatCompletion } from "@/lib/llm";
+import { chatCompletion, geminiExamCompletion } from "@/lib/llm";
 import { saveImage } from "@/lib/imageStore";
 import type { LlmBackend } from "@/types/course";
 
@@ -60,12 +60,9 @@ When the question would benefit from a visual illustration, generate an image.`;
 
   try {
     const llmStart = Date.now();
-    const result = await chatCompletion(
-      backend,
-      systemPrompt,
-      [{ role: "user", content: userMessage }],
-      enableImages,
-    );
+    const result = backend === "gemini"
+      ? await geminiExamCompletion(systemPrompt, userMessage)
+      : await chatCompletion(backend, systemPrompt, [{ role: "user", content: userMessage }]);
     const llmMs = Date.now() - llmStart;
     console.log(`[exam-preview] Q${questionNum} LLM took ${llmMs}ms (${backend}, images=${enableImages}, generatedImages=${result.images.length})`);
 
