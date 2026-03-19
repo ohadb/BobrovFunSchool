@@ -444,7 +444,7 @@ export default function LessonChat({
         {hasExam && (
           <button
             onClick={handleStartExam}
-            disabled={loadingHistory}
+            disabled={loadingHistory || sending}
             style={{
               background: `linear-gradient(135deg, ${theme.primary}, ${theme.primaryHover})`,
               border: "none",
@@ -453,9 +453,9 @@ export default function LessonChat({
               fontSize: 14,
               fontWeight: 800,
               color: "#fff",
-              cursor: "pointer",
+              cursor: loadingHistory || sending ? "not-allowed" : "pointer",
               whiteSpace: "nowrap",
-              opacity: loadingHistory ? 0.5 : 1,
+              opacity: loadingHistory || sending ? 0.5 : 1,
             }}
           >
             📝 אני רוצה להיבחן
