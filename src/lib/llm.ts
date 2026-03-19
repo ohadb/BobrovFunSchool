@@ -112,7 +112,7 @@ export async function geminiExamCompletion(
   systemPrompt: string,
   userMessage: string,
 ): Promise<LlmResult> {
-  const modelName = "gemini-2.5-flash-image";
+  const modelName = "gemini-3.1-flash-image-preview";
   console.log(`[gemini-exam] REQUEST model=${modelName} systemPrompt=${systemPrompt.length}chars`);
   const start = Date.now();
 
