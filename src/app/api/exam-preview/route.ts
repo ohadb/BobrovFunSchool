@@ -42,8 +42,8 @@ Requirements:
 - Write in ${lang}.
 - The question must have a numeric answer.
 - Keep it age-appropriate and concise.
-- When the question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate at most ONE image alongside the question to help the student. Image style: minimalist 2D icon, clean background, low-fidelity sketch style. Never generate more than one image per question.
-- IMPORTANT: Always include the question as text, even when generating an image. The text must always be present.`;
+- You MUST generate exactly ONE image for every question. The image should illustrate the question visually (e.g. a shape, a diagram, a visual math problem). Image style: minimalist 2D icon, clean background, low-fidelity sketch style.
+- IMPORTANT: Always include the question as text AND an image. Both must always be present.`;
 
   const userMessage = hasFeedback
     ? `Revise question #${questionNum}. The original was:
