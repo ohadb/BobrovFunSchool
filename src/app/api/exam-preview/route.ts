@@ -53,10 +53,10 @@ Parent feedback: "${body.feedback}"
 
 Apply the feedback and generate ONLY the revised question #${questionNum}.
 Write it as "${questionNum}. <question text>"
-When the question would benefit from a visual illustration, generate an image.`
+You MUST also generate an image illustrating this question.`
     : `Generate ONLY question #${questionNum} (out of 5).
 Write it as "${questionNum}. <question text>"
-When the question would benefit from a visual illustration, generate an image.`;
+You MUST also generate an image illustrating this question.`;
 
   try {
     const llmStart = Date.now();
