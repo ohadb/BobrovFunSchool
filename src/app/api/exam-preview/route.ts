@@ -82,7 +82,7 @@ When the question would benefit from a visual illustration, generate an image.`;
     }
 
     const totalMs = Date.now() - llmStart;
-    console.log(`[exam-preview] Q${questionNum} total: ${totalMs}ms`);
+    console.log(`[exam-preview] Q${questionNum} total: ${totalMs}ms | text="${result.text.trim().slice(0, 80)}" | imageIds=[${imageIds.join(", ")}]`);
 
     return NextResponse.json({
       index: questionNum - 1,
