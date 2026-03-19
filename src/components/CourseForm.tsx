@@ -460,7 +460,6 @@ export default function CourseForm({
                             borderRadius: 6,
                             fontSize: 13,
                             lineHeight: 1.6,
-                            whiteSpace: "pre-wrap",
                             color: "var(--text)",
                           }}
                         >
@@ -468,7 +467,7 @@ export default function CourseForm({
                             const qImages = (previewImages[lesson.id!] ?? [])[qIdx] ?? [];
                             return (
                               <div key={qIdx} style={{ marginBottom: qImages.length > 0 ? 8 : 0 }}>
-                                {line}
+                                <span dangerouslySetInnerHTML={{ __html: line }} />
                                 {qImages.length > 0 && (
                                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
                                     {qImages.map((imgId) => (
