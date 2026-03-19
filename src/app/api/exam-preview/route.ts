@@ -42,7 +42,7 @@ Requirements:
 - Write in ${lang}.
 - The question must have a numeric answer.
 - Keep it age-appropriate and concise.
-- You MUST generate exactly ONE image for every question. The image should illustrate the question visually (e.g. a shape, a diagram, a visual math problem). Image style: minimalist 2D icon, clean background, low-fidelity sketch style.
+- You MUST generate exactly ONE image for every question. The image should illustrate the question visually (e.g. a shape, a diagram, a visual math problem). Image style: minimalist 2D icon, clean background, low-fidelity sketch style. The image must NOT contain any text, labels, or numbers — only visual elements.
 - IMPORTANT: Always include the question as text AND an image. Both must always be present.`;
 
   const userMessage = hasFeedback
