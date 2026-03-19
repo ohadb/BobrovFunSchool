@@ -328,16 +328,18 @@ export default function LessonChat({
       abortRef.current = null;
     }
     setSending(true);
-    setMessages([]);
     setExamStarted(false);
     setError(null);
 
-    try {
-      await fetch(
-        `/api/chat/history?studentId=${studentId}&courseId=${courseId}&lessonId=${lessonId}`,
-        { method: "DELETE" },
-      );
+    const resumeMsg = "!בוא נחזור ללמוד את השיעור";
+    const userMsg: ChatMessage = {
+      role: "user",
+      content: resumeMsg,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
 
+    try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -346,7 +348,7 @@ export default function LessonChat({
           studentName,
           courseId,
           lessonId,
-          message: "!שלום! אני מוכן ללמוד את השיעור הזה",
+          message: resumeMsg,
         }),
       });
       if (!res.ok) {
@@ -354,16 +356,9 @@ export default function LessonChat({
         throw new Error(`API ${res.status}: ${errBody}`);
       }
       const data = (await res.json()) as ChatMessage & { llmDebug?: string };
-      const { llmDebug: debugInfo, ...greeting } = data;
+      const { llmDebug: debugInfo, ...reply } = data;
       if (debugInfo) setLlmDebug(debugInfo);
-      setMessages([
-        {
-          role: "user",
-          content: "!שלום! אני מוכן ללמוד את השיעור הזה",
-          timestamp: new Date().toISOString(),
-        },
-        greeting,
-      ]);
+      setMessages((prev) => [...prev, reply]);
     } catch (err) {
       setError(`Reset failed: ${err instanceof Error ? err.message : String(err)}`);
     }
