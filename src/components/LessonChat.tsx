@@ -292,6 +292,52 @@ export default function LessonChat({
     setSending(false);
   }
 
+  async function handleReplaceQuestion(): Promise<void> {
+    if (sending || !examProgress) return;
+    setSending(true);
+    setError(null);
+
+    const replaceMsg = "אני רוצה שאלה אחרת בבקשה";
+    const userMsg: ChatMessage = {
+      role: "user",
+      content: replaceMsg,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMsg]);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId,
+          studentName,
+          courseId,
+          lessonId,
+          message: replaceMsg,
+          examMode: true,
+        }),
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(`API ${res.status}: ${errBody}`);
+      }
+      const data = (await res.json()) as ChatMessage & { llmDebug?: string };
+      const { llmDebug: debugInfo, ...reply } = data;
+      if (debugInfo) setLlmDebug(debugInfo);
+      setMessages((prev) => [...prev, reply]);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setError(`Replace failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    abortRef.current = null;
+    setSending(false);
+  }
+
   async function handleStartExam(): Promise<void> {
     if (abortRef.current) {
       abortRef.current.abort();
@@ -496,34 +542,60 @@ export default function LessonChat({
             const isCurrent = qNum === examProgress.current;
             const isDone = qNum < examProgress.current;
             return (
-              <div
-                key={qNum}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 16,
-                  fontWeight: 800,
-                  background: isDone
-                    ? theme.primary
-                    : isCurrent
-                      ? "#fff"
-                      : theme.bubbleBg,
-                  color: isDone
-                    ? "#fff"
-                    : isCurrent
+              <div key={qNum} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 16,
+                    fontWeight: 800,
+                    background: isDone
                       ? theme.primary
-                      : "#a8a29e",
-                  border: isCurrent
-                    ? `3px solid ${theme.primary}`
-                    : "2px solid transparent",
-                  transition: "all 0.3s",
-                }}
-              >
-                {isDone ? "✓" : qNum}
+                      : isCurrent
+                        ? "#fff"
+                        : theme.bubbleBg,
+                    color: isDone
+                      ? "#fff"
+                      : isCurrent
+                        ? theme.primary
+                        : "#a8a29e",
+                    border: isCurrent
+                      ? `3px solid ${theme.primary}`
+                      : "2px solid transparent",
+                    transition: "all 0.3s",
+                  }}
+                >
+                  {isDone ? "✓" : qNum}
+                </div>
+                {isCurrent && (
+                  <button
+                    onClick={handleReplaceQuestion}
+                    disabled={sending}
+                    title="החלף שאלה"
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "50%",
+                      border: `2px solid ${theme.border}`,
+                      background: sending ? theme.bubbleBg : "#fff",
+                      color: sending ? "#a8a29e" : theme.primary,
+                      fontSize: 14,
+                      cursor: sending ? "not-allowed" : "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 0,
+                      opacity: sending ? 0.5 : 1,
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    🔄
+                  </button>
+                )}
               </div>
             );
           })}
