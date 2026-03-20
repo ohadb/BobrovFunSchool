@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { ChatMessage } from "@/types/chat";
 import { getCurrentUserId } from "@/lib/auth";
 import { APP_USERS } from "@/types/user";
@@ -134,6 +134,26 @@ export default function LessonChat({
       }
     };
   }, [studentId]);
+
+  // Compute current exam question number
+  const examProgress = useMemo(() => {
+    if (!examStarted) return null;
+    const examStartMsg = "!אני רוצה להיבחן עכשיו";
+    let examStartIdx = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user" && messages[i].content === examStartMsg) {
+        examStartIdx = i;
+        break;
+      }
+    }
+    if (examStartIdx === -1) return null;
+    const examMessages = messages.slice(examStartIdx + 1);
+    const studentAnswers = examMessages.filter((m) => m.role === "user").length;
+    const currentQuestion = Math.min(studentAnswers + 1, 5);
+    const hasScore = examMessages.some((m) => m.role === "assistant" && /\[SCORE:\s*\d+\/\d+\]/.test(m.content));
+    if (hasScore) return null;
+    return { current: currentQuestion, total: 5 };
+  }, [examStarted, messages]);
 
   // Check for exam score in messages to trigger confetti
   useEffect(() => {
@@ -458,6 +478,60 @@ export default function LessonChat({
         )}
       </div>
 
+      <div style={{ flex: 1, display: "flex", gap: 12, minHeight: 0 }}>
+      {examProgress && (
+        <div
+          style={{
+            width: 60,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8,
+            paddingTop: 12,
+            flexShrink: 0,
+          }}
+        >
+          {Array.from({ length: examProgress.total }, (_, i) => {
+            const qNum = i + 1;
+            const isCurrent = qNum === examProgress.current;
+            const isDone = qNum < examProgress.current;
+            return (
+              <div
+                key={qNum}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  fontWeight: 800,
+                  background: isDone
+                    ? theme.primary
+                    : isCurrent
+                      ? "#fff"
+                      : theme.bubbleBg,
+                  color: isDone
+                    ? "#fff"
+                    : isCurrent
+                      ? theme.primary
+                      : "#a8a29e",
+                  border: isCurrent
+                    ? `3px solid ${theme.primary}`
+                    : "2px solid transparent",
+                  transition: "all 0.3s",
+                }}
+              >
+                {isDone ? "✓" : qNum}
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 11, color: "#78716c", textAlign: "center", marginTop: 4, fontWeight: 700 }}>
+            שאלה {examProgress.current}/{examProgress.total}
+          </div>
+        </div>
+      )}
       <div
         style={{
           flex: 1,
@@ -587,6 +661,7 @@ export default function LessonChat({
         {sending && <ThinkingDots />}
 
         <div ref={bottomRef} />
+      </div>
       </div>
 
       {llmDebug && (
