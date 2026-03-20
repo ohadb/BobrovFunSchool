@@ -42,7 +42,7 @@ export async function POST(
   const isHebrew = course.language === "he";
   const interests = await getInterests(studentId);
   const backend = course.llmBackend ?? "gemini";
-  const canGenerateImages = backend === "gemini";
+  const canGenerateImages = backend === "gemini" && (course.enableImages ?? false);
   const systemPrompt = examMode
     ? buildExamPrompt(
         course.name,

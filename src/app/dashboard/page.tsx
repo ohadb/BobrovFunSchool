@@ -36,6 +36,7 @@ export default function Dashboard(): React.ReactElement {
     description: string;
     language: CourseLanguage;
     llmBackend: LlmBackend;
+    enableImages: boolean;
     lessons: { title: string; content: string; order: number }[];
   }): Promise<void> => {
     await fetch("/api/courses", {
@@ -52,6 +53,7 @@ export default function Dashboard(): React.ReactElement {
     description: string;
     language: CourseLanguage;
     llmBackend: LlmBackend;
+    enableImages: boolean;
     lessons: { title: string; content: string; order: number }[];
   }): Promise<void> => {
     if (!editingCourse) return;

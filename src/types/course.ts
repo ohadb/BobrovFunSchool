@@ -20,6 +20,7 @@ export interface Course {
   description: string;
   language: CourseLanguage;
   llmBackend: LlmBackend;
+  enableImages: boolean;
   lessons: Lesson[];
   createdAt: string;
   updatedAt: string;
@@ -30,6 +31,7 @@ export interface CreateCourseInput {
   description: string;
   language: CourseLanguage;
   llmBackend?: LlmBackend;
+  enableImages?: boolean;
   lessons: Omit<Lesson, "id">[];
 }
 
@@ -38,5 +40,6 @@ export interface UpdateCourseInput {
   description?: string;
   language?: CourseLanguage;
   llmBackend?: LlmBackend;
+  enableImages?: boolean;
   lessons?: (Omit<Lesson, "id"> & { id?: string })[];
 }

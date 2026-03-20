@@ -18,6 +18,7 @@ interface CourseFormProps {
     description: string;
     language: CourseLanguage;
     llmBackend: LlmBackend;
+    enableImages: boolean;
     lessons: LessonInput[];
   }) => Promise<void>;
   onCancel: () => void;
@@ -35,6 +36,9 @@ export default function CourseForm({
   );
   const [llmBackend, setLlmBackend] = useState<LlmBackend>(
     course?.llmBackend ?? "gemini",
+  );
+  const [enableImages, setEnableImages] = useState(
+    course?.enableImages ?? false,
   );
   const [lessons, setLessons] = useState<LessonInput[]>(
     course?.lessons.map((l) => ({
@@ -154,6 +158,7 @@ export default function CourseForm({
       lessonContent: lesson.content,
       language,
       llmBackend,
+      enableImages,
     };
     const delay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
     const results = await Promise.all(
@@ -204,6 +209,7 @@ export default function CourseForm({
       lessonContent: lesson.content,
       language,
       llmBackend,
+      enableImages,
       feedback,
     };
     const delay = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
@@ -257,7 +263,7 @@ export default function CourseForm({
         ? { ...l.exam, preview: examPreview[l.id!] ?? l.exam.preview ?? "" }
         : undefined,
     }));
-    await onSave({ name, description, language, llmBackend, lessons: lessonsWithPreview });
+    await onSave({ name, description, language, llmBackend, enableImages, lessons: lessonsWithPreview });
     setSaving(false);
   };
 
@@ -333,6 +339,20 @@ export default function CourseForm({
           <option value="claude">Claude (Anthropic)</option>
           <option value="gemini">Gemini (Google)</option>
         </select>
+      </div>
+
+      <div>
+        <label
+          style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 500, cursor: "pointer" }}
+        >
+          <input
+            type="checkbox"
+            checked={enableImages}
+            onChange={(e) => setEnableImages(e.target.checked)}
+            style={{ width: 18, height: 18, cursor: "pointer" }}
+          />
+          Enable image generation for exams
+        </label>
       </div>
 
       <div>

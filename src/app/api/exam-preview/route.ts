@@ -9,6 +9,7 @@ interface ExamPreviewRequest {
   lessonContent: string;
   language: string;
   llmBackend?: LlmBackend;
+  enableImages?: boolean;
   questionNum: number;
   currentQuestion?: string;
   feedback?: string;
@@ -27,10 +28,15 @@ export async function POST(
 
   const backend: LlmBackend = body.llmBackend ?? "gemini";
   const lang = body.language === "he" ? "Hebrew (עברית)" : "English";
-  const enableImages = backend === "gemini";
+  const enableImages = backend === "gemini" && (body.enableImages ?? false);
   const questionNum = body.questionNum ?? 1;
 
   const hasFeedback = body.currentQuestion && body.feedback;
+
+  const imageInstruction = enableImages
+    ? `\n- You MUST generate exactly ONE image for every question. The image should illustrate the question visually (e.g. a shape, a diagram, a visual math problem). Image style: minimalist 2D icon, clean background, low-fidelity sketch style. The image must NOT contain any text, labels, or numbers — only visual elements.
+- IMPORTANT: Always include the question as text AND an image. Both must always be present.`
+    : "";
 
   const systemPrompt = `You are creating exam questions for a kids lesson.
 
@@ -41,9 +47,11 @@ Content: ${body.lessonContent}
 Requirements:
 - Write in ${lang}.
 - The question must have a numeric answer.
-- Keep it age-appropriate and concise.
-- You MUST generate exactly ONE image for every question. The image should illustrate the question visually (e.g. a shape, a diagram, a visual math problem). Image style: minimalist 2D icon, clean background, low-fidelity sketch style. The image must NOT contain any text, labels, or numbers — only visual elements.
-- IMPORTANT: Always include the question as text AND an image. Both must always be present.`;
+- Keep it age-appropriate and concise.${imageInstruction}`;
+
+  const imageUserInstruction = enableImages
+    ? "\nYou MUST also generate an image illustrating this question."
+    : "";
 
   const userMessage = hasFeedback
     ? `Revise question #${questionNum}. The original was:
@@ -52,11 +60,9 @@ ${body.currentQuestion}
 Parent feedback: "${body.feedback}"
 
 Apply the feedback and generate ONLY the revised question #${questionNum}.
-Write it as "${questionNum}. <question text>"
-You MUST also generate an image illustrating this question.`
+Write it as "${questionNum}. <question text>"${imageUserInstruction}`
     : `Generate ONLY question #${questionNum} (out of 5).
-Write it as "${questionNum}. <question text>"
-You MUST also generate an image illustrating this question.`;
+Write it as "${questionNum}. <question text>"${imageUserInstruction}`;
 
   try {
     const llmStart = Date.now();
