@@ -736,25 +736,23 @@ export default function LessonChat({
       </div>
       </div>
 
-      {llmDebug && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 8,
-            left: 8,
-            background: "#333",
-            color: "#0f0",
-            fontSize: 11,
-            padding: "4px 8px",
-            borderRadius: 4,
-            zIndex: 9999,
-            fontFamily: "monospace",
-            direction: "ltr",
-          }}
-        >
-          {llmDebug}
-        </div>
-      )}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 8,
+          left: 8,
+          color: "#a8a29e",
+          fontSize: 10,
+          padding: "2px 6px",
+          fontFamily: "monospace",
+          direction: "ltr",
+          opacity: 0.7,
+        }}
+      >
+        {process.env.NEXT_PUBLIC_BUILD_TIME
+          ? new Date(process.env.NEXT_PUBLIC_BUILD_TIME).toLocaleString()
+          : "dev"}
+      </div>
 
       <div
         style={{
