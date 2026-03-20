@@ -418,7 +418,7 @@ export default function LessonChat({
         </button>
         <button
           onClick={handleReset}
-          disabled={loadingHistory}
+          disabled={loadingHistory || sending}
           style={{
             background: "#fef2f2",
             border: "2px solid #fecaca",
@@ -427,8 +427,8 @@ export default function LessonChat({
             fontSize: 14,
             fontWeight: 700,
             color: "#ef4444",
-            cursor: "pointer",
-            opacity: loadingHistory ? 0.5 : 1,
+            cursor: loadingHistory || sending ? "not-allowed" : "pointer",
+            opacity: loadingHistory || sending ? 0.5 : 1,
           }}
         >
           להתחיל מחדש
