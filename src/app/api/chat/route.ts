@@ -64,21 +64,25 @@ export async function POST(
         canGenerateImages,
       );
 
+  // Only keep recent messages to prevent language drift with long histories.
+  const MAX_HISTORY = 20;
+  const recentSessionMessages = session.messages.slice(-MAX_HISTORY);
   const allMessages = [
-    ...session.messages.map((m) => ({
+    ...recentSessionMessages.map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
     })),
     { role: "user" as const, content: message },
   ];
 
+  const lang = isHebrew ? "Hebrew (עברית)" : "English";
   let historyMessages: { role: "user" | "assistant"; content: string }[];
   if (examMode && allMessages.length > 1) {
     // Condense prior Q&A into a summary to keep the request small and fast.
     const prior = allMessages.slice(0, -1);
     const summary = prior.map((m) => `${m.role === "user" ? "Student" : "Teacher"}: ${m.content}`).join("\n");
     historyMessages = [
-      { role: "user", content: `Conversation so far:\n${summary}\n\nStudent's latest message: ${message}` },
+      { role: "user", content: `Conversation so far:\n${summary}\n\nREMINDER: You MUST respond in ${lang}. Never switch to another language.\n\nStudent's latest message: ${message}` },
     ];
   } else {
     historyMessages = allMessages;
@@ -180,7 +184,7 @@ Current lesson: "${lessonTitle}"
 Lesson content: ${lessonContent}
 
 Instructions:
-- Respond in ${lang}.
+- CRITICAL: You MUST respond ONLY in ${lang}. Never switch to another language, even if the conversation history contains messages in other languages. Every word of your response must be in ${lang}.
 - NEVER use LaTeX, MathJax, or any math markup like $, \\frac, \\times etc. Write all math in plain text (e.g. "2/3" not "$\\frac{2}{3}$", "3 × 4" not "$3 \\times 4$").
 - NEVER use markdown formatting like *, **, #, or backticks. Write plain text only — no bold, italic, headers, or code blocks.
 - You are a female teacher — speak and refer to yourself accordingly.
@@ -217,7 +221,7 @@ Current lesson: "${lessonTitle}"
 Lesson content: ${lessonContent}
 
 Instructions:
-- Respond in ${lang}.
+- CRITICAL: You MUST respond ONLY in ${lang}. Never switch to another language, even if the conversation history contains messages in other languages. Every word of your response must be in ${lang}.
 - NEVER use LaTeX, MathJax, or any math markup like $, \\frac, \\times etc. Write all math in plain text (e.g. "2/3" not "$\\frac{2}{3}$", "3 × 4" not "$3 \\times 4$").
 - NEVER use markdown formatting like *, **, #, or backticks. Write plain text only — no bold, italic, headers, or code blocks.
 - You are a female teacher — speak and refer to yourself accordingly.
@@ -231,7 +235,7 @@ Instructions:
 - Address the student by their name (${studentName}) and as a women, and always add a compliment adjective before their name (e.g. "החכמה", "המדהימה", "היפה", "המוכשרת", "הנפלאה").
 - Be encouraging and supportive, even when the answer is wrong.
 - Keep responses concise and age-appropriate.
-- NEVER link to external images or URLs. Do not use markdown image syntax or provide links to imgur or any other site.${interestsLine}${canGenerateImages ? `\n- When a question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student. Image style: minimalist 2D icon, clean background, low-fidelity sketch style.` : ""}${examPreview ? `\n\nHere is an example of the kind of questions you should generate (use these as a reference for style and difficulty, but generate fresh different questions):\n${examPreview}` : ""}`;
+- NEVER link to external images or URLs. Do not use markdown image syntax or provide links to imgur or any other site.${interestsLine}${canGenerateImages ? `\n- When a question would benefit from a visual illustration (e.g. a shape, a diagram, a visual math problem), generate an image alongside the question to help the student. Image style: minimalist 2D icon, clean background, low-fidelity sketch style.` : ""}${examPreview && !examPreview.includes("Failed") && !examPreview.includes("error") ? `\n\nHere is an example of the kind of questions you should generate (use these as a reference for style and difficulty, but generate fresh different questions):\n${examPreview}` : ""}`;
 }
 
 function stripMarkdown(text: string): string {
