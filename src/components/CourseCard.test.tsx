@@ -8,6 +8,8 @@ const mockCourse: Course = {
   name: "Fun Math",
   description: "Learn math through games",
   language: "en",
+  llmBackend: "gemini",
+  enableImages: false,
   lessons: [
     { id: "lesson-1", title: "Counting", content: "Count to 10", order: 1 },
     { id: "lesson-2", title: "Addition", content: "Add numbers", order: 2 },

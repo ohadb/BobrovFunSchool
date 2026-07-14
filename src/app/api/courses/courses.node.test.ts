@@ -1,8 +1,9 @@
 import { GET, POST } from "@/app/api/courses/route";
 import { resetCourses } from "@/lib/courseStore";
+import { NextRequest } from "next/server";
 
-beforeEach(() => {
-  resetCourses();
+beforeEach(async () => {
+  await resetCourses();
 });
 
 describe("GET /api/courses", () => {
@@ -15,7 +16,7 @@ describe("GET /api/courses", () => {
   });
 
   it("returns created courses", async () => {
-    const createReq = new Request("http://localhost/api/courses", {
+    const createReq = new NextRequest("http://localhost/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -37,7 +38,7 @@ describe("GET /api/courses", () => {
 
 describe("POST /api/courses", () => {
   it("creates a course successfully", async () => {
-    const request = new Request("http://localhost/api/courses", {
+    const request = new NextRequest("http://localhost/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -59,7 +60,7 @@ describe("POST /api/courses", () => {
   });
 
   it("returns 400 when name is missing", async () => {
-    const request = new Request("http://localhost/api/courses", {
+    const request = new NextRequest("http://localhost/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ description: "no name" }),
@@ -70,7 +71,7 @@ describe("POST /api/courses", () => {
   });
 
   it("returns 400 when description is missing", async () => {
-    const request = new Request("http://localhost/api/courses", {
+    const request = new NextRequest("http://localhost/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Math" }),
@@ -81,7 +82,7 @@ describe("POST /api/courses", () => {
   });
 
   it("defaults to empty lessons when not provided", async () => {
-    const request = new Request("http://localhost/api/courses", {
+    const request = new NextRequest("http://localhost/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Math", description: "desc" }),
@@ -96,7 +97,7 @@ describe("POST /api/courses", () => {
   });
 
   it("returns 400 for invalid language", async () => {
-    const request = new Request("http://localhost/api/courses", {
+    const request = new NextRequest("http://localhost/api/courses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

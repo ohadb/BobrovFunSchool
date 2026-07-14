@@ -2,8 +2,8 @@ import { GET, PUT, DELETE } from "@/app/api/courses/[id]/route";
 import { createCourse, resetCourses } from "@/lib/courseStore";
 import { NextRequest } from "next/server";
 
-beforeEach(() => {
-  resetCourses();
+beforeEach(async () => {
+  await resetCourses();
 });
 
 function makeParams(id: string): { params: Promise<{ id: string }> } {
@@ -12,7 +12,7 @@ function makeParams(id: string): { params: Promise<{ id: string }> } {
 
 describe("GET /api/courses/[id]", () => {
   it("returns a course by id", async () => {
-    const course = createCourse({
+    const course = await createCourse({
       name: "Math",
       description: "desc",
       language: "en",
@@ -38,7 +38,7 @@ describe("GET /api/courses/[id]", () => {
 
 describe("PUT /api/courses/[id]", () => {
   it("updates a course", async () => {
-    const course = createCourse({
+    const course = await createCourse({
       name: "Math",
       description: "old",
       language: "en",
@@ -75,7 +75,7 @@ describe("PUT /api/courses/[id]", () => {
 
 describe("DELETE /api/courses/[id]", () => {
   it("deletes an existing course", async () => {
-    const course = createCourse({
+    const course = await createCourse({
       name: "Math",
       description: "desc",
       language: "en",

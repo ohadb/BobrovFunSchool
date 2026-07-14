@@ -7,31 +7,31 @@ import {
   resetCourses,
 } from "@/lib/courseStore";
 
-beforeEach(() => {
-  resetCourses();
+beforeEach(async () => {
+  await resetCourses();
 });
 
 describe("courseStore", () => {
   describe("getAllCourses", () => {
-    it("returns empty array when no courses exist", () => {
-      expect(getAllCourses()).toEqual([]);
+    it("returns empty array when no courses exist", async () => {
+      expect(await getAllCourses()).toEqual([]);
     });
 
-    it("returns all created courses", () => {
-      createCourse({
+    it("returns all created courses", async () => {
+      await createCourse({
         name: "Math",
         description: "Math course",
         language: "en",
         lessons: [],
       });
-      createCourse({
+      await createCourse({
         name: "Science",
         description: "Science course",
         language: "he",
         lessons: [],
       });
 
-      const courses = getAllCourses();
+      const courses = await getAllCourses();
       expect(courses).toHaveLength(2);
       expect(courses[0].name).toBe("Math");
       expect(courses[1].name).toBe("Science");
@@ -39,8 +39,8 @@ describe("courseStore", () => {
   });
 
   describe("createCourse", () => {
-    it("creates a course with correct fields", () => {
-      const course = createCourse({
+    it("creates a course with correct fields", async () => {
+      const course = await createCourse({
         name: "Fun Math",
         description: "Learn math through games",
         language: "en",
@@ -56,8 +56,8 @@ describe("courseStore", () => {
       expect(course.updatedAt).toBeDefined();
     });
 
-    it("creates lessons with optional exam", () => {
-      const course = createCourse({
+    it("creates lessons with optional exam", async () => {
+      const course = await createCourse({
         name: "Math",
         description: "Math course",
         language: "en",
@@ -76,10 +76,11 @@ describe("courseStore", () => {
       expect(course.lessons[1].exam).toBeUndefined();
     });
 
-    it("creates lessons with generated IDs", () => {
-      const course = createCourse({
+    it("creates lessons with generated IDs", async () => {
+      const course = await createCourse({
         name: "Math",
         description: "Math course",
+        language: "en",
         lessons: [
           { title: "Counting", content: "Learn to count", order: 1 },
           { title: "Addition", content: "Learn to add", order: 2 },
@@ -95,33 +96,33 @@ describe("courseStore", () => {
   });
 
   describe("getCourseById", () => {
-    it("returns course when found", () => {
-      const created = createCourse({
+    it("returns course when found", async () => {
+      const created = await createCourse({
         name: "Math",
         description: "desc",
         language: "en",
         lessons: [],
       });
-      const found = getCourseById(created.id);
+      const found = await getCourseById(created.id);
 
       expect(found).toBeDefined();
       expect(found?.id).toBe(created.id);
     });
 
-    it("returns undefined when not found", () => {
-      expect(getCourseById("nonexistent-id")).toBeUndefined();
+    it("returns undefined when not found", async () => {
+      expect(await getCourseById("nonexistent-id")).toBeUndefined();
     });
   });
 
   describe("updateCourse", () => {
-    it("updates course name and description", () => {
-      const created = createCourse({
+    it("updates course name and description", async () => {
+      const created = await createCourse({
         name: "Math",
         description: "old",
         language: "en",
         lessons: [],
       });
-      const updated = updateCourse(created.id, {
+      const updated = await updateCourse(created.id, {
         name: "Fun Math",
         description: "new description",
       });
@@ -131,28 +132,28 @@ describe("courseStore", () => {
       expect(updated?.description).toBe("new description");
     });
 
-    it("preserves fields not included in update", () => {
-      const created = createCourse({
+    it("preserves fields not included in update", async () => {
+      const created = await createCourse({
         name: "Math",
         description: "desc",
         language: "en",
         lessons: [],
       });
-      const updated = updateCourse(created.id, { name: "New Math" });
+      const updated = await updateCourse(created.id, { name: "New Math" });
 
       expect(updated?.name).toBe("New Math");
       expect(updated?.description).toBe("desc");
     });
 
-    it("replaces lessons when provided", () => {
-      const created = createCourse({
+    it("replaces lessons when provided", async () => {
+      const created = await createCourse({
         name: "Math",
         description: "desc",
         language: "en",
         lessons: [{ title: "Old Lesson", content: "old", order: 1 }],
       });
 
-      const updated = updateCourse(created.id, {
+      const updated = await updateCourse(created.id, {
         lessons: [{ title: "New Lesson", content: "new", order: 1 }],
       });
 
@@ -160,39 +161,39 @@ describe("courseStore", () => {
       expect(updated?.lessons[0].title).toBe("New Lesson");
     });
 
-    it("updates the updatedAt timestamp", () => {
-      const created = createCourse({
+    it("updates the updatedAt timestamp", async () => {
+      const created = await createCourse({
         name: "Math",
         description: "desc",
         language: "en",
         lessons: [],
       });
-      const updated = updateCourse(created.id, { name: "Updated" });
+      const updated = await updateCourse(created.id, { name: "Updated" });
 
       expect(updated?.updatedAt).toBeDefined();
     });
 
-    it("returns undefined for nonexistent course", () => {
-      expect(updateCourse("fake-id", { name: "test" })).toBeUndefined();
+    it("returns undefined for nonexistent course", async () => {
+      expect(await updateCourse("fake-id", { name: "test" })).toBeUndefined();
     });
   });
 
   describe("deleteCourse", () => {
-    it("deletes an existing course", () => {
-      const created = createCourse({
+    it("deletes an existing course", async () => {
+      const created = await createCourse({
         name: "Math",
         description: "desc",
         language: "en",
         lessons: [],
       });
-      const result = deleteCourse(created.id);
+      const result = await deleteCourse(created.id);
 
       expect(result).toBe(true);
-      expect(getAllCourses()).toHaveLength(0);
+      expect(await getAllCourses()).toHaveLength(0);
     });
 
-    it("returns false for nonexistent course", () => {
-      expect(deleteCourse("fake-id")).toBe(false);
+    it("returns false for nonexistent course", async () => {
+      expect(await deleteCourse("fake-id")).toBe(false);
     });
   });
 });

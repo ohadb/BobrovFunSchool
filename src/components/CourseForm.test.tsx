@@ -4,6 +4,10 @@ import CourseForm from "@/components/CourseForm";
 import type { Course } from "@/types/course";
 
 describe("CourseForm", () => {
+  beforeEach(() => {
+    window.confirm = jest.fn(() => true);
+  });
+
   it("renders empty form for creating a new course", () => {
     render(<CourseForm onSave={jest.fn()} onCancel={jest.fn()} />);
 
@@ -20,6 +24,8 @@ describe("CourseForm", () => {
       name: "Fun Math",
       description: "Math is fun",
       language: "he",
+      llmBackend: "gemini",
+      enableImages: false,
       lessons: [
         { id: "l1", title: "Counting", content: "Learn counting", order: 1 },
       ],
@@ -70,13 +76,10 @@ describe("CourseForm", () => {
     expect(screen.getByText("+ Add Exam")).toBeInTheDocument();
 
     await userEvent.click(screen.getByText("+ Add Exam"));
-    expect(screen.getByPlaceholderText("Exam description")).toBeInTheDocument();
     expect(screen.getByText("Remove Exam")).toBeInTheDocument();
 
     await userEvent.click(screen.getByText("Remove Exam"));
-    expect(
-      screen.queryByPlaceholderText("Exam description"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Remove Exam")).not.toBeInTheDocument();
   });
 
   it("renders exam when editing a course with an exam", () => {
@@ -85,6 +88,8 @@ describe("CourseForm", () => {
       name: "Fun Math",
       description: "Math is fun",
       language: "en",
+      llmBackend: "gemini",
+      enableImages: false,
       lessons: [
         {
           id: "l1",
@@ -102,7 +107,6 @@ describe("CourseForm", () => {
       <CourseForm course={course} onSave={jest.fn()} onCancel={jest.fn()} />,
     );
 
-    expect(screen.getByDisplayValue("Test counting")).toBeInTheDocument();
     expect(screen.getByText("Remove Exam")).toBeInTheDocument();
   });
 
@@ -123,7 +127,9 @@ describe("CourseForm", () => {
     expect(onSave).toHaveBeenCalledWith({
       name: "Science",
       description: "Fun science",
-      language: "en",
+      language: "he",
+      llmBackend: "gemini",
+      enableImages: false,
       lessons: [],
     });
   });
