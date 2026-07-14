@@ -22,7 +22,7 @@ export async function chatCompletion(
   messages: { role: "user" | "assistant"; content: string }[],
   enableImages?: boolean,
 ): Promise<LlmResult> {
-  const model = backend === "gemini" ? "gemini-3.1-flash-image-preview" : "claude-sonnet-4-20250514";
+  const model = backend === "gemini" ? "gemini-3.1-flash-image-preview" : "claude-sonnet-5";
   console.log(`[${backend}] REQUEST model=${model} systemPrompt=${systemPrompt.length}chars`);
   const start = Date.now();
   try {
@@ -43,10 +43,13 @@ async function claudeCompletion(
   systemPrompt: string,
   messages: { role: "user" | "assistant"; content: string }[],
 ): Promise<LlmResult> {
-  const model = "claude-sonnet-4-20250514";
+  const model = "claude-sonnet-5";
   const response = await anthropic.messages.create({
     model,
     max_tokens: 1024,
+    // Sonnet 5 runs adaptive thinking by default when `thinking` is omitted;
+    // disable it so short tutoring replies stay fast and within max_tokens.
+    thinking: { type: "disabled" },
     system: systemPrompt,
     messages,
   });
