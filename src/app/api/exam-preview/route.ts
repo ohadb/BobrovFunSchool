@@ -34,7 +34,7 @@ export async function POST(
   const hasFeedback = body.currentQuestion && body.feedback;
 
   const imageInstruction = enableImages
-    ? `\n- You MUST generate exactly ONE image for every question. The image should illustrate the question visually (e.g. a shape, a diagram, a visual math problem). Image style: minimalist 2D icon, clean background, low-fidelity sketch style. The image must NOT contain any text, labels, or numbers — only visual elements.
+    ? `\n- Every question MUST be illustrated with exactly ONE image (e.g. a shape, a diagram, a visual math problem). Image style: minimalist 2D icon, clean background, low-fidelity sketch style. The image must NOT contain any text, labels, or numbers — only visual elements.
 - IMPORTANT: Always include the question as text AND an image. Both must always be present.`
     : "";
 
@@ -50,7 +50,7 @@ Requirements:
 - Keep it age-appropriate and concise.${imageInstruction}`;
 
   const imageUserInstruction = enableImages
-    ? "\nYou MUST also generate an image illustrating this question."
+    ? "\nThe question MUST also include an image illustrating it."
     : "";
 
   const userMessage = hasFeedback
@@ -66,26 +66,37 @@ Write it as "${questionNum}. <question text>"${imageUserInstruction}`;
 
   try {
     const llmStart = Date.now();
-    const result = backend === "gemini"
-      ? await geminiExamCompletion(systemPrompt, userMessage)
-      : await chatCompletion(backend, systemPrompt, [{ role: "user", content: userMessage }]);
+    const result =
+      backend === "gemini"
+        ? await geminiExamCompletion(systemPrompt, userMessage, enableImages)
+        : await chatCompletion(backend, systemPrompt, [
+            { role: "user", content: userMessage },
+          ]);
     const llmMs = Date.now() - llmStart;
-    console.log(`[exam-preview] Q${questionNum} LLM took ${llmMs}ms (${backend}, images=${enableImages}, generatedImages=${result.images.length})`);
+    console.log(
+      `[exam-preview] Q${questionNum} LLM took ${llmMs}ms (${backend}, images=${enableImages}, generatedImages=${result.images.length})`,
+    );
 
     const imageIds: string[] = [];
     if (result.images.length > 0) {
       const imgStart = Date.now();
       for (const img of result.images) {
         const sizeKB = Math.round((img.base64.length * 3) / 4 / 1024);
-        console.log(`[exam-preview] Q${questionNum} image: ${img.mimeType}, ~${sizeKB}KB base64`);
+        console.log(
+          `[exam-preview] Q${questionNum} image: ${img.mimeType}, ~${sizeKB}KB base64`,
+        );
         const id = await saveImage(img.base64, img.mimeType);
         imageIds.push(id);
       }
-      console.log(`[exam-preview] Q${questionNum} saving ${imageIds.length} images took ${Date.now() - imgStart}ms`);
+      console.log(
+        `[exam-preview] Q${questionNum} saving ${imageIds.length} images took ${Date.now() - imgStart}ms`,
+      );
     }
 
     const totalMs = Date.now() - llmStart;
-    console.log(`[exam-preview] Q${questionNum} total: ${totalMs}ms | text="${result.text.trim().slice(0, 80)}" | imageIds=[${imageIds.join(", ")}]`);
+    console.log(
+      `[exam-preview] Q${questionNum} total: ${totalMs}ms | text="${result.text.trim().slice(0, 80)}" | imageIds=[${imageIds.join(", ")}]`,
+    );
 
     return NextResponse.json({
       index: questionNum - 1,
@@ -94,7 +105,9 @@ Write it as "${questionNum}. <question text>"${imageUserInstruction}`;
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error(`[exam-preview] Q${questionNum} FAILED after ${Date.now()}ms: ${message}`);
+    console.error(
+      `[exam-preview] Q${questionNum} FAILED after ${Date.now()}ms: ${message}`,
+    );
     return NextResponse.json(
       { error: `Failed to generate question ${questionNum}: ${message}` },
       { status: 500 },
